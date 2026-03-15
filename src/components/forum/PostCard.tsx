@@ -16,6 +16,7 @@ interface PostCardProps {
   liked?: boolean;
   tag?: string | null;
   isPinned?: boolean;
+  viewCount?: number;
   onClick: () => void;
   onLike: () => void;
 }
