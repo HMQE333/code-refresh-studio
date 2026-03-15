@@ -13,6 +13,10 @@ import Kontakt from "./pages/Kontakt.tsx";
 import Informacje from "./pages/Informacje.tsx";
 import Regulamin from "./pages/Regulamin.tsx";
 import PolitykaPrywatnosci from "./pages/PolitykaPrywatnosci.tsx";
+import Dyskusje from "./pages/Dyskusje.tsx";
+import Forum from "./pages/Forum.tsx";
+import Galeria from "./pages/Galeria.tsx";
+import OdzyskajHaslo from "./pages/OdzyskajHaslo.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
