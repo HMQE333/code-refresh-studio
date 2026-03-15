@@ -73,6 +73,14 @@ export default function CommentSection({ comments, onAddComment, onLikeComment, 
               Odpowiedz
             </button>
           )}
+          {onDeleteComment && (canModerate || (user && comment.authorId === user.id)) && (
+            <button
+              onClick={() => { if (confirm("Usunąć ten komentarz?")) onDeleteComment(comment.id); }}
+              className="hover:text-destructive transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
         </div>
         {replies(comment.id).map((r) => renderComment(r, true))}
       </div>
