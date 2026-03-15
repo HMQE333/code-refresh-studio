@@ -152,14 +152,8 @@ export default function RejestracjaPage() {
                     placeholder="Hasło"
                     required
                     minLength={8}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const form = e.target.form;
-                      if (form) {
-                        const fd = new FormData(form);
-                        fd.set("password", val);
-                      }
-                    }}
+                    value={passwordValue}
+                    onChange={(e) => setPasswordValue(e.target.value)}
                     className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 pr-12"
                   />
                   <button
@@ -170,7 +164,30 @@ export default function RejestracjaPage() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                <PasswordStrength password="" />
+                {passwordValue.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4].map((level) => {
+                        const strength = getPasswordStrength(passwordValue);
+                        return (
+                          <div
+                            key={level}
+                            className={`h-1.5 flex-1 rounded-full transition-colors ${
+                              level <= strength.level
+                                ? strength.level <= 1 ? "bg-destructive" : strength.level <= 2 ? "bg-yellow-500" : strength.level <= 3 ? "bg-blue-500" : "bg-green-500"
+                                : "bg-border"
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <p className={`text-[10px] ${
+                      getPasswordStrength(passwordValue).level <= 1 ? "text-destructive" : getPasswordStrength(passwordValue).level <= 2 ? "text-yellow-500" : "text-green-500"
+                    }`}>
+                      {getPasswordStrength(passwordValue).label}
+                    </p>
+                  </div>
+                )}
                 <input
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
