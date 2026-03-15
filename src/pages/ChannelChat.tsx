@@ -241,6 +241,11 @@ export default function ChannelChatPage() {
                 <Send size={16} />
               </button>
             </div>
+            {newMessage.length > 1800 && (
+              <p className={`text-[10px] mt-1 text-right ${newMessage.length > 1950 ? "text-destructive" : "text-muted-foreground"}`}>
+                {newMessage.length}/2000
+              </p>
+            )}
           ) : (
             <p className="text-center text-sm text-muted-foreground">
               <Link to="/logowanie" className="text-primary hover:underline">Zaloguj się</Link> aby dołączyć do rozmowy.
