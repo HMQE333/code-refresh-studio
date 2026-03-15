@@ -390,7 +390,6 @@ export default function ProfilPage() {
                 <Share2 className="w-3.5 h-3.5" /> Udostępnij
               </button>
             </div>
-            )}
 
             {/* Edit / View mode */}
             {editing ? (
