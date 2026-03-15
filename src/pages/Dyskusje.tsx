@@ -146,7 +146,7 @@ export default function DyskusjePage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CHANNELS.map((ch) => (
-            <ChatButton key={ch.id} channel={ch} messageCount={messageCounts[ch.id] || 0} />
+            <ChatButton key={ch.id} channel={ch} messageCount={messageCounts[ch.id] || 0} lastMessage={lastMessages[ch.id]} />
           ))}
         </div>
       </div>
