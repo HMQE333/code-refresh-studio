@@ -195,7 +195,7 @@ export default function ChannelChatPage() {
                       </Link>
                     )}
                     <span className="text-[10px] text-muted-foreground">{formatTimeAgo(msg.created_at)}</span>
-                    {isOwn && (
+                    {canDelete && (
                       <button
                         onClick={() => handleDelete(msg.id)}
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"

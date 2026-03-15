@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface CommentData {
   id: string;
   author: string;
+  authorId?: string;
   avatarUrl?: string | null;
   createdAt: string;
   content: string;
@@ -20,6 +21,8 @@ interface CommentSectionProps {
   comments: CommentData[];
   onAddComment: (content: string, parentId?: string | null) => Promise<void>;
   onLikeComment: (commentId: string) => void;
+  onDeleteComment?: (commentId: string) => void;
+  canModerate?: boolean;
 }
 
 export default function CommentSection({ comments, onAddComment, onLikeComment }: CommentSectionProps) {
