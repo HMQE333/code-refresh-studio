@@ -93,6 +93,7 @@ export default function AdminPage() {
     { id: "gallery" as Tab, label: "Galeria", icon: Images },
     { id: "logs" as Tab, label: "Logi", icon: ScrollText },
     { id: "newsletter" as Tab, label: "Newsletter", icon: Mail },
+    { id: "reviews" as Tab, label: "Opinie", icon: Star },
     { id: "settings" as Tab, label: "Ustawienia", icon: Settings },
   ];
 
