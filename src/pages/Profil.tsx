@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag, LogOut, Trash2, Mail, UserPlus, UserCheck, Clock } from "lucide-react";
+import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag, LogOut, Trash2, Mail, UserPlus, UserCheck, Clock, Share2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
@@ -120,6 +120,58 @@ function FriendButton({ userId, currentUserId }: { userId: string; currentUserId
     <Button variant="outline" size="sm" onClick={sendRequest} className="gap-1.5">
       <UserPlus className="w-3.5 h-3.5" /> Dodaj
     </Button>
+  );
+}
+
+function FriendsList({ userId }: { userId: string }) {
+  const [friends, setFriends] = useState<{ user_id: string; username: string | null; avatar_url: string | null }[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: friendships } = await supabase
+        .from("friendships")
+        .select("user_a, user_b")
+        .or(`user_a.eq.${userId},user_b.eq.${userId}`);
+
+      if (!friendships || friendships.length === 0) return;
+
+      const friendIds = friendships.map((f) => f.user_a === userId ? f.user_b : f.user_a);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, username, avatar_url")
+        .in("user_id", friendIds);
+
+      setFriends(profiles || []);
+    };
+    load();
+  }, [userId]);
+
+  if (friends.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Users className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold text-foreground">Znajomi ({friends.length})</h2>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {friends.map((f) => (
+          <Link
+            key={f.user_id}
+            to={`/profil/${f.username}`}
+            className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 hover:border-primary/30 transition-colors"
+          >
+            <Avatar className="w-6 h-6">
+              <AvatarImage src={f.avatar_url || undefined} />
+              <AvatarFallback className="bg-secondary text-foreground text-[10px]">
+                {(f.username || "?").slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs font-medium text-foreground">{f.username || "Użytkownik"}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -372,14 +424,24 @@ export default function ProfilPage() {
               )}
             </div>
 
-            {/* Rank badge */}
-            {rank && (
-              <div className="mb-4">
+            {/* Rank badge + Share */}
+            <div className="flex items-center gap-2 mb-4">
+              {rank && (
                 <Badge variant="secondary" className="gap-1.5 px-3 py-1" style={{ color: rank.color || undefined }}>
                   <User className="w-3 h-3" /> {rank.name}
                 </Badge>
-              </div>
-            )}
+              )}
+              <button
+                onClick={async () => {
+                  const url = `${window.location.origin}/profil/${profile.username}`;
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Link do profilu skopiowany!");
+                }}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto"
+              >
+                <Share2 className="w-3.5 h-3.5" /> Udostępnij
+              </button>
+            </div>
 
             {/* Edit / View mode */}
             {editing ? (
@@ -462,6 +524,9 @@ export default function ProfilPage() {
             </div>
           </div>
         </div>
+
+        {/* Friends list */}
+        <FriendsList userId={profile.user_id} />
 
         {/* Recent threads */}
         {recentThreads.length > 0 && (
