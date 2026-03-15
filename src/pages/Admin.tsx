@@ -127,6 +127,7 @@ export default function AdminPage() {
         {tab === "announcements" && isAdmin && <AnnouncementsTab />}
         {tab === "boards" && isAdmin && <BoardsTab />}
         {tab === "threads" && <ThreadsTab />}
+        {tab === "gallery" && <GalleryAdminTab />}
       </div>
     </div>
   );
