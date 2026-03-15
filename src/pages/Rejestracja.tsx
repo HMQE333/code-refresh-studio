@@ -151,6 +151,14 @@ export default function RejestracjaPage() {
                     placeholder="Hasło"
                     required
                     minLength={8}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const form = e.target.form;
+                      if (form) {
+                        const fd = new FormData(form);
+                        fd.set("password", val);
+                      }
+                    }}
                     className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 pr-12"
                   />
                   <button
@@ -161,6 +169,7 @@ export default function RejestracjaPage() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                <PasswordStrength password="" />
                 <input
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
