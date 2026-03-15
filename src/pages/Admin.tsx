@@ -88,6 +88,7 @@ export default function AdminPage() {
     { id: "users" as Tab, label: "Użytkownicy", icon: Users },
     { id: "reports" as Tab, label: "Zgłoszenia", icon: Flag },
     { id: "announcements" as Tab, label: "Ogłoszenia", icon: Megaphone },
+    { id: "boards" as Tab, label: "Działy forum", icon: MessageSquare },
   ];
 
   return (
