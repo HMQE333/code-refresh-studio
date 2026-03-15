@@ -36,8 +36,8 @@ export default function InformacjePage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("announcements" as any)
+      const { data } = await (supabase as any)
+        .from("announcements")
         .select("id, title, content, category, created_at")
         .eq("category", activeKey)
         .eq("published", true)
