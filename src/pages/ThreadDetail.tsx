@@ -101,6 +101,7 @@ export default function ThreadDetailPage() {
       posts.map((p: any) => ({
         id: p.id,
         author: p.profiles?.username ?? "Anonim",
+        authorId: p.author_id,
         avatarUrl: p.profiles?.avatar_url,
         createdAt: p.created_at,
         content: p.content,
