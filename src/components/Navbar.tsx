@@ -183,6 +183,13 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-foreground-2 hover:text-foreground transition-colors"
+            >
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === "dark" ? "Jasny motyw" : "Ciemny motyw"}
+            </button>
             <div className="pt-3 border-t border-border flex flex-col gap-2">
               {user ? (
                 <>
