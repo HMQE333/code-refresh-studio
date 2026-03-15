@@ -227,6 +227,19 @@ export default function ThreadDetailPage() {
                   <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
                   {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
                 </button>
+                {(user?.id === thread.author_id || isAdmin || isModerator) && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Czy na pewno chcesz usunąć ten wątek?")) return;
+                      await supabase.from("threads").update({ deleted_at: new Date().toISOString() }).eq("id", thread.id);
+                      toast.success("Wątek został usunięty.");
+                      navigate("/forum", { replace: true });
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                  >
+                    <Trash2 className="w-4 h-4" /> Usuń
+                  </button>
+                )}
               </div>
             </div>
           </div>
