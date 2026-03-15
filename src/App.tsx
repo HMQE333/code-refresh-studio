@@ -15,6 +15,7 @@ import Informacje from "./pages/Informacje.tsx";
 import Regulamin from "./pages/Regulamin.tsx";
 import PolitykaPrywatnosci from "./pages/PolitykaPrywatnosci.tsx";
 import Dyskusje from "./pages/Dyskusje.tsx";
+import ChannelChat from "./pages/ChannelChat.tsx";
 import Forum from "./pages/Forum.tsx";
 import ThreadDetail from "./pages/ThreadDetail.tsx";
 import Galeria from "./pages/Galeria.tsx";
