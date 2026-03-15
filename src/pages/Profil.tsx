@@ -392,6 +392,42 @@ export default function ProfilPage() {
             </div>
           </div>
         )}
+
+        {/* Account actions */}
+        {isOwnProfile && user && (
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground mb-2">Konto</h2>
+            <Button
+              variant="outline"
+              className="w-full gap-2 justify-start"
+              onClick={() => { signOut(); navigate("/"); }}
+            >
+              <LogOut className="w-4 h-4" /> Wyloguj się
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-2 justify-start text-destructive hover:text-destructive hover:border-destructive/40"
+              onClick={async () => {
+                if (!confirm("Czy na pewno chcesz usunąć swoje konto? Ta operacja jest nieodwracalna.")) return;
+                if (!confirm("Na pewno? Wszystkie Twoje dane zostaną usunięte.")) return;
+                // Soft-delete: clear profile data
+                await supabase.from("profiles").update({
+                  display_name: "[usunięte]",
+                  bio: null,
+                  avatar_url: null,
+                  age: null,
+                  region_id: null,
+                  fishing_method_id: null,
+                }).eq("user_id", user.id);
+                await signOut();
+                toast.success("Konto zostało dezaktywowane.");
+                navigate("/");
+              }}
+            >
+              <Trash2 className="w-4 h-4" /> Usuń konto
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
