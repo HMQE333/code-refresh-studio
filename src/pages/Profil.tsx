@@ -23,6 +23,7 @@ type Profile = {
   fishing_method_id: string | null;
   rank_id: string | null;
   joined_at: string;
+  last_seen_at: string | null;
 };
 
 type Region = { id: string; name: string };
