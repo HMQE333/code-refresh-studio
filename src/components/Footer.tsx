@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Fish, MessageSquare, Images, HelpCircle, Shield, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const footerLinks = [
   {
