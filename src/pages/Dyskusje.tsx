@@ -76,6 +76,7 @@ function ChatButton({ channel, messageCount, lastMessage }: { channel: Channel; 
 export default function DyskusjePage() {
   const { user } = useAuth();
   const [messageCounts, setMessageCounts] = useState<Record<string, number>>({});
+  const [lastMessages, setLastMessages] = useState<Record<string, { text: string; author_name: string | null; created_at: string }>>({});
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
@@ -89,6 +90,23 @@ export default function DyskusjePage() {
         counts[msg.channel_id] = (counts[msg.channel_id] || 0) + 1;
       });
       setMessageCounts(counts);
+
+      // Fetch last message per channel
+      const lastMsgs: Record<string, any> = {};
+      await Promise.all(
+        CHANNELS.map(async (ch) => {
+          const { data: msgs } = await supabase
+            .from("channel_messages")
+            .select("text, author_name, created_at")
+            .eq("channel_id", ch.id)
+            .order("created_at", { ascending: false })
+            .limit(1);
+          if (msgs && msgs.length > 0) {
+            lastMsgs[ch.id] = msgs[0];
+          }
+        })
+      );
+      setLastMessages(lastMsgs);
     };
     loadCounts();
 
