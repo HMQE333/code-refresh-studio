@@ -43,7 +43,7 @@ const voivodeshipLabels: Record<string, string> = {
 
 export default function ProfilPage() {
   const { username: paramUsername } = useParams<{ username: string }>();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
