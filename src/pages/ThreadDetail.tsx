@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Pin } from "lucide-react";
+import { ArrowLeft, Heart, Pin, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeAgo } from "@/lib/timeAgo";
@@ -12,6 +13,7 @@ import { toast } from "@/components/ui/sonner";
 export default function ThreadDetailPage() {
   const { threadId } = useParams<{ threadId: string }>();
   const { user } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
   const navigate = useNavigate();
   const [thread, setThread] = useState<any>(null);
   const [comments, setComments] = useState<CommentData[]>([]);
@@ -225,6 +227,19 @@ export default function ThreadDetailPage() {
                   <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
                   {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
                 </button>
+                {(user?.id === thread.author_id || isAdmin || isModerator) && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Czy na pewno chcesz usunąć ten wątek?")) return;
+                      await supabase.from("threads").update({ deleted_at: new Date().toISOString() }).eq("id", thread.id);
+                      toast.success("Wątek został usunięty.");
+                      navigate("/forum", { replace: true });
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                  >
+                    <Trash2 className="w-4 h-4" /> Usuń
+                  </button>
+                )}
               </div>
             </div>
           </div>
