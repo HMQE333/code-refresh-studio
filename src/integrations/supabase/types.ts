@@ -89,6 +89,113 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_comments: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          content: string
+          created_at: string
+          gallery_item_id: string
+          id: string
+          parent_id: string | null
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          content: string
+          created_at?: string
+          gallery_item_id: string
+          id?: string
+          parent_id?: string | null
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          gallery_item_id?: string
+          id?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_comments_gallery_item_id_fkey"
+            columns: ["gallery_item_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gallery_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_items: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          title: string
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          title: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      gallery_likes: {
+        Row: {
+          created_at: string
+          gallery_item_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gallery_item_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gallery_item_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_likes_gallery_item_id_fkey"
+            columns: ["gallery_item_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string
