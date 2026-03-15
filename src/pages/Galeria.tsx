@@ -215,75 +215,29 @@ export default function GaleriaPage() {
 
       {/* Lightbox */}
       {lightbox && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-          <div className="relative max-w-4xl w-full max-h-[90vh] bg-card rounded-2xl overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
-            {/* Image */}
-            <div className="md:w-2/3 bg-black flex items-center justify-center min-h-[300px]">
-              <img src={lightbox.image_url} alt={lightbox.title} className="max-w-full max-h-[60vh] object-contain" />
-            </div>
-            {/* Sidebar */}
-            <div className="md:w-1/3 flex flex-col border-l border-border">
-              <div className="p-4 border-b border-border">
-                <h3 className="font-bold text-foreground">{lightbox.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{lightbox.author_name} · {formatTimeAgo(lightbox.created_at)}</p>
-                {lightbox.description && <p className="text-sm text-foreground/80 mt-2">{lightbox.description}</p>}
-                <div className="flex items-center gap-4 mt-3">
-                  <button onClick={() => handleLike(lightbox)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    <Heart className={`w-4 h-4 ${lightbox.liked ? "fill-red-500 text-red-500" : ""}`} /> {lightbox.likes_count}
-                  </button>
-                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <MessageCircle className="w-4 h-4" /> {comments.length}
-                  </span>
-                  {user && (lightbox.author_id === user.id || isAdmin || isModerator) && (
-                    <button
-                      onClick={async () => {
-                        if (!confirm("Usunąć to zdjęcie?")) return;
-                        await supabase.from("gallery_items").delete().eq("id", lightbox.id);
-                        setLightbox(null);
-                        loadItems();
-                      }}
-                      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto"
-                    >
-                      <Trash2 className="w-4 h-4" /> Usuń
-                    </button>
-                  )}
-                </div>
-              </div>
-              {/* Comments */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[300px]">
-                {comments.length === 0 && <p className="text-xs text-muted-foreground">Brak komentarzy</p>}
-                {comments.map((c) => (
-                  <div key={c.id} className="flex gap-2">
-                    <Avatar className="w-6 h-6 shrink-0">
-                      <AvatarFallback className="bg-secondary text-foreground text-[10px]">{(c.author_name ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-medium text-primary">{c.author_name}</span>
-                        <span className="text-[10px] text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
-                      </div>
-                      <p className="text-xs text-foreground/85">{c.content}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {/* Comment input */}
-              {user ? (
-                <div className="p-3 border-t border-border flex gap-2">
-                  <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Komentarz..." className="text-xs" onKeyDown={(e) => { if (e.key === "Enter") handleComment(); }} />
-                  <Button size="sm" onClick={handleComment} disabled={!newComment.trim()}><Send className="w-3.5 h-3.5" /></Button>
-                </div>
-              ) : (
-                <p className="p-3 border-t border-border text-xs text-muted-foreground text-center">
-                  <Link to="/logowanie" className="text-primary hover:underline">Zaloguj się</Link> aby komentować
-                </p>
-              )}
-            </div>
-            <button onClick={() => setLightbox(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <LightboxView
+          item={lightbox}
+          items={items}
+          comments={comments}
+          newComment={newComment}
+          setNewComment={setNewComment}
+          user={user}
+          isAdmin={isAdmin}
+          isModerator={isModerator}
+          onClose={() => setLightbox(null)}
+          onLike={() => handleLike(lightbox)}
+          onComment={handleComment}
+          onDelete={async () => {
+            if (!confirm("Usunąć to zdjęcie?")) return;
+            await supabase.from("gallery_items").delete().eq("id", lightbox.id);
+            setLightbox(null);
+            loadItems();
+          }}
+          onNavigate={(item) => {
+            setLightbox(item);
+            supabase.from("gallery_comments").select("*").eq("gallery_item_id", item.id).order("created_at").then(({ data }) => setComments(data || []));
+          }}
+        />
       )}
 
       {/* Create modal */}
