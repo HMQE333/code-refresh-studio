@@ -102,6 +102,7 @@ export default function Navbar() {
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <NotificationsDropdown />
             {user ? (
               <>
                 {(isAdmin || isModerator) && (
