@@ -89,6 +89,7 @@ const App = () => (
               <AnimatedRoutes />
             </main>
             <Footer />
+            <ScrollToTop />
           </div>
         </AuthProvider>
       </BrowserRouter>
