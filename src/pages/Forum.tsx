@@ -144,9 +144,13 @@ export default function ForumPage() {
       result.sort((a, b) => b.comments - a.comments);
     }
 
-    setThreads(result);
+    if (append) {
+      setThreads((prev) => [...prev, ...result]);
+    } else {
+      setThreads(result);
+    }
     setLoading(false);
-  }, [activeBoard, activeSort, searchQuery, user]);
+  }, [activeBoard, activeSort, searchQuery, user, page]);
 
   useEffect(() => {
     loadThreads();
