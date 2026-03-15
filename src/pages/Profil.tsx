@@ -240,6 +240,16 @@ export default function ProfilPage() {
                   <Pencil className="w-3.5 h-3.5" /> Edytuj
                 </Button>
               )}
+              {!isOwnProfile && user && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/zglos-problem?type=user&target=${profile.username}`)}
+                  className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+                >
+                  <Flag className="w-3.5 h-3.5" /> Zgłoś
+                </Button>
+              )}
               {isOwnProfile && editing && (
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
