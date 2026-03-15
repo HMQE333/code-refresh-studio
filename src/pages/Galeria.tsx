@@ -275,3 +275,141 @@ export default function GaleriaPage() {
     </div>
   );
 }
+
+function LightboxView({
+  item,
+  items,
+  comments,
+  newComment,
+  setNewComment,
+  user,
+  isAdmin,
+  isModerator,
+  onClose,
+  onLike,
+  onComment,
+  onDelete,
+  onNavigate,
+}: {
+  item: GalleryItem;
+  items: GalleryItem[];
+  comments: GalleryComment[];
+  newComment: string;
+  setNewComment: (v: string) => void;
+  user: any;
+  isAdmin: boolean;
+  isModerator: boolean;
+  onClose: () => void;
+  onLike: () => void;
+  onComment: () => void;
+  onDelete: () => void;
+  onNavigate: (item: GalleryItem) => void;
+}) {
+  const currentIndex = items.findIndex((i) => i.id === item.id);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < items.length - 1;
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && hasPrev) onNavigate(items[currentIndex - 1]);
+      if (e.key === "ArrowRight" && hasNext) onNavigate(items[currentIndex + 1]);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [currentIndex, hasPrev, hasNext, items, onClose, onNavigate]);
+
+  const handleShare = async () => {
+    const url = window.location.origin + `/galeria?photo=${item.id}`;
+    await navigator.clipboard.writeText(url);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="relative max-w-4xl w-full max-h-[90vh] bg-card rounded-2xl overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
+        {/* Image area with navigation */}
+        <div className="md:w-2/3 bg-black flex items-center justify-center min-h-[300px] relative">
+          <img src={item.image_url} alt={item.title} className="max-w-full max-h-[60vh] object-contain" />
+          {hasPrev && (
+            <button
+              onClick={() => onNavigate(items[currentIndex - 1])}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          {hasNext && (
+            <button
+              onClick={() => onNavigate(items[currentIndex + 1])}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+          {/* Counter */}
+          <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/50 px-2 py-0.5 rounded-full">
+            {currentIndex + 1} / {items.length}
+          </span>
+        </div>
+        {/* Sidebar */}
+        <div className="md:w-1/3 flex flex-col border-l border-border">
+          <div className="p-4 border-b border-border">
+            <h3 className="font-bold text-foreground">{item.title}</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              <Link to={`/profil/${item.author_name}`} className="text-primary hover:underline">{item.author_name}</Link> · {formatTimeAgo(item.created_at)}
+            </p>
+            {item.description && <p className="text-sm text-foreground/80 mt-2">{item.description}</p>}
+            <div className="flex items-center gap-3 mt-3">
+              <button onClick={onLike} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Heart className={`w-4 h-4 ${item.liked ? "fill-red-500 text-red-500" : ""}`} /> {item.likes_count}
+              </button>
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <MessageCircle className="w-4 h-4" /> {comments.length}
+              </span>
+              <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Udostępnij">
+                <Share2 className="w-4 h-4" />
+              </button>
+              {user && (item.author_id === user.id || isAdmin || isModerator) && (
+                <button onClick={onDelete} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+          {/* Comments */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[300px]">
+            {comments.length === 0 && <p className="text-xs text-muted-foreground">Brak komentarzy</p>}
+            {comments.map((c) => (
+              <div key={c.id} className="flex gap-2">
+                <Avatar className="w-6 h-6 shrink-0">
+                  <AvatarFallback className="bg-secondary text-foreground text-[10px]">{(c.author_name ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-medium text-primary">{c.author_name}</span>
+                    <span className="text-[10px] text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
+                  </div>
+                  <p className="text-xs text-foreground/85">{c.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Comment input */}
+          {user ? (
+            <div className="p-3 border-t border-border flex gap-2">
+              <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Komentarz..." className="text-xs" onKeyDown={(e) => { if (e.key === "Enter") onComment(); }} />
+              <Button size="sm" onClick={onComment} disabled={!newComment.trim()}><Send className="w-3.5 h-3.5" /></Button>
+            </div>
+          ) : (
+            <p className="p-3 border-t border-border text-xs text-muted-foreground text-center">
+              <Link to="/logowanie" className="text-primary hover:underline">Zaloguj się</Link> aby komentować
+            </p>
+          )}
+        </div>
+        <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
