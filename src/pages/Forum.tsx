@@ -303,6 +303,13 @@ export default function ForumPage() {
                 onLike={() => handleLike(thread.id)}
               />
             ))}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button variant="outline" onClick={() => setPage((p) => p + 1)} className="gap-2">
+                  Załaduj więcej wątków
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
