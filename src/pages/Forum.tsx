@@ -91,7 +91,8 @@ export default function ForumPage() {
 
     setHasMore(threadsData.length > PAGE_SIZE);
 
-    const threadIds = threadsData.map((t: any) => t.id);
+    const displayData = threadsData.slice(0, PAGE_SIZE);
+    const threadIds = displayData.map((t: any) => t.id);
 
     // Get like counts
     const { data: likesData } = await supabase
