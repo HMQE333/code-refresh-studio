@@ -223,8 +223,18 @@ export default function ThreadDetailPage() {
                 <span className="text-xs text-muted-foreground">• {formatTimeAgo(thread.created_at)}</span>
                 {thread.tag && <Badge variant="secondary" className="text-xs">{thread.tag}</Badge>}
               </div>
-              <h1 className="text-xl font-bold text-foreground mb-3">{thread.title}</h1>
-              <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">{thread.content}</p>
+              <h1 className="text-xl font-bold text-foreground mb-3">
+                {editing ? (
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
+                ) : (
+                  thread.title
+                )}
+              </h1>
+              {editing ? (
+                <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={6} className="text-sm" />
+              ) : (
+                <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">{thread.content}</p>
+              )}
 
               <div className="flex items-center gap-4 mt-5 pt-4 border-t border-border">
                 <button
