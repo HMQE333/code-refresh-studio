@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Users, Flag, MessageSquare, Images, FileText,
-  Shield, BarChart3, Search, Ban, Clock, Trash2
+  Shield, BarChart3, Search, Ban, Clock, Trash2, Megaphone, Plus, Pencil
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
