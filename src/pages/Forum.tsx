@@ -1,28 +1,162 @@
-import { useState } from "react";
-import { Search, Plus, ThumbsUp, MessageSquare, Clock, TrendingUp, Filter } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Plus, Flame, Clock3, MessageSquare } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import PostCard from "@/components/forum/PostCard";
+import CreatePostModal from "@/components/forum/CreatePostModal";
+import { toast } from "@/components/ui/sonner";
+
+type ThreadRow = {
+  id: string;
+  title: string;
+  content: string;
+  tag: string | null;
+  created_at: string;
+  board_id: string;
+  author_id: string;
+  profiles: { username: string | null; avatar_url: string | null } | null;
+  likes: number;
+  comments: number;
+  liked: boolean;
+};
 
 const sortOptions = [
-  { id: "popular", label: "Popularne", icon: TrendingUp },
-  { id: "newest", label: "Najnowsze", icon: Clock },
-  { id: "comments", label: "Najwięcej komentarzy", icon: MessageSquare },
-];
-
-const mockThreads = [
-  { id: 1, title: "Jaki kołowrotek do spinningu na szczupaka?", content: "Szukam czegoś w budżecie do 300zł, żeby dobrze pracował z wędką 2.4m...", author: "Wędkarz123", date: "2 godz. temu", tags: ["Spinning", "Sprzęt"], likes: 24, comments: 18 },
-  { id: 2, title: "Najlepsze zanęty na karpia wiosną", content: "Jak co roku zaczynam sezon karpiowy i zastanawiam się co w tym roku sprawdzi się najlepiej...", author: "KarpLover", date: "5 godz. temu", tags: ["Karpiowanie", "Zanęty"], likes: 41, comments: 32 },
-  { id: 3, title: "Regulamin łowiska Staw Młyński — zmiany 2025", content: "Czy ktoś wie jakie nowe zasady obowiązują od tego sezonu? Słyszałem że zmienili limity...", author: "Splawik_Pro", date: "12 godz. temu", tags: ["Łowiska", "Regulaminy"], likes: 15, comments: 8 },
-  { id: 4, title: "Mój rekordowy sandacz 🐟", content: "Wczoraj na Wiśle udało mi się złowić sandacza 78cm! Guma 12cm w kolorze motoroil...", author: "NightAngler", date: "1 dzień temu", tags: ["Spinning", "Trofea"], likes: 89, comments: 45 },
-  { id: 5, title: "Feeder na rzece — jaki koszyk?", content: "Planuję sesję na Bugu, nurt dosyć silny. Jakie koszyczki polecacie? 80g czy 120g?", author: "FeederMaster", date: "1 dzień temu", tags: ["Feeder", "Sprzęt"], likes: 12, comments: 22 },
-  { id: 6, title: "Najśmieszniejszy moment na rybach 😂", content: "Opowiedzcie o swoich najzabawniejszych przygodach nad wodą. Ja zacznę — kiedyś zasnąłem na fotelu...", author: "MemFisher", date: "2 dni temu", tags: ["Memy", "Off-topic"], likes: 156, comments: 98 },
-];
+  { id: "popular", label: "Popularne", icon: Flame },
+  { id: "newest", label: "Najnowsze", icon: Clock3 },
+  { id: "comments", label: "Komentarze", icon: MessageSquare },
+] as const;
 
 export default function ForumPage() {
-  const [activeSort, setActiveSort] = useState("popular");
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [threads, setThreads] = useState<ThreadRow[]>([]);
+  const [boards, setBoards] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [activeBoard, setActiveBoard] = useState<string | null>(null);
+  const [activeSort, setActiveSort] = useState<string>("newest");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load boards
+  useEffect(() => {
+    supabase.from("boards").select("id, name, slug").order("sort_order").then(({ data }) => {
+      setBoards(data ?? []);
+    });
+  }, []);
+
+  // Load threads
+  const loadThreads = useCallback(async () => {
+    setLoading(true);
+
+    let query = supabase
+      .from("threads")
+      .select("id, title, content, tag, created_at, board_id, author_id, profiles!threads_author_id_fkey(username, avatar_url)");
+
+    if (activeBoard) {
+      query = query.eq("board_id", activeBoard);
+    }
+
+    if (searchQuery.trim()) {
+      query = query.ilike("title", `%${searchQuery.trim()}%`);
+    }
+
+    query = query.order("created_at", { ascending: false }).limit(50);
+
+    const { data: threadsData } = await query;
+
+    if (!threadsData || threadsData.length === 0) {
+      setThreads([]);
+      setLoading(false);
+      return;
+    }
+
+    const threadIds = threadsData.map((t: any) => t.id);
+
+    // Get like counts
+    const { data: likesData } = await supabase
+      .from("reactions")
+      .select("thread_id")
+      .in("thread_id", threadIds)
+      .eq("type", "like");
+
+    const likeCounts: Record<string, number> = {};
+    (likesData ?? []).forEach((r: any) => {
+      likeCounts[r.thread_id] = (likeCounts[r.thread_id] ?? 0) + 1;
+    });
+
+    // Get user's likes
+    const userLikes = new Set<string>();
+    if (user) {
+      const { data: myLikes } = await supabase
+        .from("reactions")
+        .select("thread_id")
+        .in("thread_id", threadIds)
+        .eq("user_id", user.id)
+        .eq("type", "like");
+      (myLikes ?? []).forEach((r: any) => userLikes.add(r.thread_id));
+    }
+
+    // Get comment counts
+    const { data: commentsData } = await supabase
+      .from("posts")
+      .select("thread_id")
+      .in("thread_id", threadIds);
+
+    const commentCounts: Record<string, number> = {};
+    (commentsData ?? []).forEach((p: any) => {
+      commentCounts[p.thread_id] = (commentCounts[p.thread_id] ?? 0) + 1;
+    });
+
+    let result: ThreadRow[] = threadsData.map((t: any) => ({
+      ...t,
+      profiles: t.profiles,
+      likes: likeCounts[t.id] ?? 0,
+      comments: commentCounts[t.id] ?? 0,
+      liked: userLikes.has(t.id),
+    }));
+
+    // Sort
+    if (activeSort === "popular") {
+      result.sort((a, b) => b.likes - a.likes);
+    } else if (activeSort === "comments") {
+      result.sort((a, b) => b.comments - a.comments);
+    }
+
+    setThreads(result);
+    setLoading(false);
+  }, [activeBoard, activeSort, searchQuery, user]);
+
+  useEffect(() => {
+    loadThreads();
+  }, [loadThreads]);
+
+  const handleLike = async (threadId: string) => {
+    if (!user) {
+      toast.error("Zaloguj się, aby polubić.");
+      return;
+    }
+    const thread = threads.find((t) => t.id === threadId);
+    if (!thread) return;
+
+    if (thread.liked) {
+      await supabase.from("reactions").delete().eq("thread_id", threadId).eq("user_id", user.id).eq("type", "like");
+    } else {
+      await supabase.from("reactions").insert({ thread_id: threadId, user_id: user.id, type: "like" });
+    }
+
+    setThreads((prev) =>
+      prev.map((t) =>
+        t.id === threadId
+          ? { ...t, liked: !t.liked, likes: t.liked ? t.likes - 1 : t.likes + 1 }
+          : t
+      )
+    );
+  };
+
+  const defaultBoardId = boards.length > 0 ? boards[0].id : "";
 
   return (
     <div className="min-h-screen bg-background py-16 px-4">
@@ -33,10 +167,39 @@ export default function ForumPage() {
             <h1 className="text-3xl font-bold text-foreground">Forum</h1>
             <p className="text-muted-foreground mt-1">Przeglądaj wątki i dołącz do dyskusji</p>
           </div>
-          <Button className="gap-2 self-start">
-            <Plus className="w-4 h-4" />
-            Utwórz wątek
-          </Button>
+          {user && (
+            <Button onClick={() => setShowCreate(true)} className="gap-2 self-start">
+              <Plus className="w-4 h-4" />
+              Utwórz wątek
+            </Button>
+          )}
+        </div>
+
+        {/* Board filter */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <button
+            onClick={() => setActiveBoard(null)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              !activeBoard
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground hover:text-foreground border border-border"
+            }`}
+          >
+            Wszystkie
+          </button>
+          {boards.map((b) => (
+            <button
+              key={b.id}
+              onClick={() => setActiveBoard(b.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeBoard === b.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground border border-border"
+              }`}
+            >
+              {b.name}
+            </button>
+          ))}
         </div>
 
         {/* Search + Sort */}
@@ -72,45 +235,43 @@ export default function ForumPage() {
         </div>
 
         {/* Thread List */}
-        <div className="space-y-3">
-          {mockThreads.map((thread) => (
-            <article
-              key={thread.id}
-              className="rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 interactive-press cursor-pointer"
-            >
-              <div className="flex gap-4">
-                <Avatar className="w-10 h-10 mt-1 shrink-0">
-                  <AvatarFallback className="bg-secondary text-foreground text-sm">
-                    {thread.author.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-sm font-medium text-primary">{thread.author}</span>
-                    <span className="text-xs text-muted-foreground">• {thread.date}</span>
-                  </div>
-                  <h3 className="text-base font-semibold text-foreground mb-1 leading-snug">{thread.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{thread.content}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2 flex-wrap">
-                      {thread.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="w-3.5 h-3.5" /> {thread.likes}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="w-3.5 h-3.5" /> {thread.comments}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : threads.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground">Brak wątków. Bądź pierwszy i utwórz nowy!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {threads.map((thread) => (
+              <PostCard
+                key={thread.id}
+                id={thread.id}
+                author={thread.profiles?.username ?? "Anonim"}
+                avatarUrl={thread.profiles?.avatar_url}
+                createdAt={thread.created_at}
+                title={thread.title}
+                content={thread.content}
+                likes={thread.likes}
+                comments={thread.comments}
+                liked={thread.liked}
+                tag={thread.tag}
+                onClick={() => navigate(`/forum/${thread.id}`)}
+                onLike={() => handleLike(thread.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Create Modal */}
+        <CreatePostModal
+          isOpen={showCreate}
+          onClose={() => setShowCreate(false)}
+          onCreated={loadThreads}
+          boardId={activeBoard ?? defaultBoardId}
+        />
       </div>
     </div>
   );

@@ -1,0 +1,217 @@
+import { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Heart } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { formatTimeAgo } from "@/lib/timeAgo";
+import CommentSection, { CommentData } from "@/components/forum/CommentSection";
+import { toast } from "@/components/ui/sonner";
+
+export default function ThreadDetailPage() {
+  const { threadId } = useParams<{ threadId: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [thread, setThread] = useState<any>(null);
+  const [comments, setComments] = useState<CommentData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+
+  const loadThread = useCallback(async () => {
+    if (!threadId) return;
+    const { data } = await supabase
+      .from("threads")
+      .select("*, profiles!threads_author_id_fkey(username, avatar_url)")
+      .eq("id", threadId)
+      .maybeSingle();
+
+    if (!data) {
+      navigate("/forum", { replace: true });
+      return;
+    }
+    setThread(data);
+
+    // Get like count
+    const { count } = await supabase
+      .from("reactions")
+      .select("*", { count: "exact", head: true })
+      .eq("thread_id", threadId)
+      .eq("type", "like");
+    setLikeCount(count ?? 0);
+
+    // Check if user liked
+    if (user) {
+      const { data: myReaction } = await supabase
+        .from("reactions")
+        .select("id")
+        .eq("thread_id", threadId)
+        .eq("user_id", user.id)
+        .eq("type", "like")
+        .maybeSingle();
+      setLiked(!!myReaction);
+    }
+
+    setLoading(false);
+  }, [threadId, user, navigate]);
+
+  const loadComments = useCallback(async () => {
+    if (!threadId) return;
+    const { data: posts } = await supabase
+      .from("posts")
+      .select("*, profiles!posts_author_id_fkey(username, avatar_url)")
+      .eq("thread_id", threadId)
+      .order("created_at", { ascending: true });
+
+    if (!posts) return;
+
+    // Get reactions for posts
+    const postIds = posts.map((p: any) => p.id);
+    const { data: reactionsData } = await supabase
+      .from("reactions")
+      .select("post_id, user_id")
+      .in("post_id", postIds.length > 0 ? postIds : ["none"])
+      .eq("type", "like");
+
+    const likeCounts: Record<string, number> = {};
+    const userLikes = new Set<string>();
+    (reactionsData ?? []).forEach((r: any) => {
+      likeCounts[r.post_id] = (likeCounts[r.post_id] ?? 0) + 1;
+      if (user && r.user_id === user.id) userLikes.add(r.post_id);
+    });
+
+    setComments(
+      posts.map((p: any) => ({
+        id: p.id,
+        author: p.profiles?.username ?? "Anonim",
+        avatarUrl: p.profiles?.avatar_url,
+        createdAt: p.created_at,
+        content: p.content,
+        likes: likeCounts[p.id] ?? 0,
+        liked: userLikes.has(p.id),
+        parentId: p.parent_id,
+      }))
+    );
+  }, [threadId, user]);
+
+  useEffect(() => {
+    loadThread();
+    loadComments();
+  }, [loadThread, loadComments]);
+
+  const handleLikeThread = async () => {
+    if (!user || !threadId) {
+      toast.error("Zaloguj się, aby polubić.");
+      return;
+    }
+    if (liked) {
+      await supabase.from("reactions").delete().eq("thread_id", threadId).eq("user_id", user.id).eq("type", "like");
+      setLiked(false);
+      setLikeCount((c) => c - 1);
+    } else {
+      await supabase.from("reactions").insert({ thread_id: threadId, user_id: user.id, type: "like" });
+      setLiked(true);
+      setLikeCount((c) => c + 1);
+    }
+  };
+
+  const handleAddComment = async (content: string, parentId?: string | null) => {
+    if (!user || !threadId) {
+      toast.error("Zaloguj się, aby komentować.");
+      return;
+    }
+    const { error } = await supabase.from("posts").insert({
+      content,
+      thread_id: threadId,
+      author_id: user.id,
+      parent_id: parentId ?? null,
+    });
+    if (error) {
+      toast.error("Nie udało się dodać komentarza.");
+      return;
+    }
+    await loadComments();
+  };
+
+  const handleLikeComment = async (commentId: string) => {
+    if (!user) {
+      toast.error("Zaloguj się, aby polubić.");
+      return;
+    }
+    const comment = comments.find((c) => c.id === commentId);
+    if (!comment) return;
+
+    if (comment.liked) {
+      await supabase.from("reactions").delete().eq("post_id", commentId).eq("user_id", user.id).eq("type", "like");
+    } else {
+      await supabase.from("reactions").insert({ post_id: commentId, user_id: user.id, type: "like" });
+    }
+    await loadComments();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!thread) return null;
+
+  const authorName = thread.profiles?.username ?? "Anonim";
+
+  return (
+    <div className="min-h-screen bg-background py-16 px-4">
+      <div className="max-w-3xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft size={16} /> Wróć
+        </button>
+
+        <article className="rounded-2xl border border-border bg-card p-6">
+          <div className="flex gap-4">
+            <Avatar className="w-12 h-12 shrink-0">
+              <AvatarFallback className="bg-secondary text-foreground">
+                {authorName.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-sm font-medium text-primary">{authorName}</span>
+                <span className="text-xs text-muted-foreground">• {formatTimeAgo(thread.created_at)}</span>
+                {thread.tag && <Badge variant="secondary" className="text-xs">{thread.tag}</Badge>}
+              </div>
+              <h1 className="text-xl font-bold text-foreground mb-3">{thread.title}</h1>
+              <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">{thread.content}</p>
+
+              <div className="flex items-center gap-4 mt-5 pt-4 border-t border-border">
+                <button
+                  onClick={handleLikeThread}
+                  className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? "text-red-400" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
+                  {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-base font-semibold text-foreground mb-2">
+            Komentarze ({comments.length})
+          </h2>
+          <CommentSection
+            comments={comments}
+            onAddComment={handleAddComment}
+            onLikeComment={handleLikeComment}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
