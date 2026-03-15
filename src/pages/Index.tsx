@@ -1,8 +1,10 @@
 import Hero from "@/components/home/Hero";
 import Statistics from "@/components/home/Statistics";
-import QuickAccess from "@/components/home/QuickAccess";
 import WhyUs from "@/components/home/WhyUs";
 import Reviews from "@/components/home/Reviews";
+import MediaScrolls from "@/components/home/MediaScrolls";
+import Tutorials from "@/components/home/Tutorials";
+import NavigationTutorial from "@/components/home/NavigationTutorial";
 import Sponsors from "@/components/home/Sponsors";
 import BottomCTA from "@/components/home/BottomCTA";
 
@@ -11,9 +13,11 @@ const Index = () => {
     <>
       <Hero />
       <Statistics />
-      <QuickAccess />
       <WhyUs />
       <Reviews />
+      <MediaScrolls />
+      <Tutorials />
+      <NavigationTutorial />
       <Sponsors />
       <BottomCTA />
     </>

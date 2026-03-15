@@ -129,11 +129,11 @@
 }
 
 .interactive-press:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px) scale(1.01);
 }
 
 .interactive-press:active {
-  transform: scale(0.97);
+  transform: translateY(1px) scale(0.98);
 }
 
 .shimmer-accent {
