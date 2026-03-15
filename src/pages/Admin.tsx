@@ -571,6 +571,8 @@ function AnnouncementsTab() {
             <option value="ogloszenia">Ogłoszenia</option>
             <option value="aktualnosci">Aktualności</option>
             <option value="konkursy">Konkursy</option>
+            <option value="wydarzenia">Wydarzenia</option>
+            <option value="kulisy">Kulisy</option>
           </select>
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving || !title.trim() || !content.trim()}>
