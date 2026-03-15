@@ -5,6 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/contexts/AuthContext";
 
+function getPasswordStrength(pw: string): { level: number; label: string } {
+  if (pw.length < 6) return { level: 1, label: "Bardzo słabe" };
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  if (score <= 1) return { level: 1, label: "Słabe" };
+  if (score <= 2) return { level: 2, label: "Średnie" };
+  if (score <= 3) return { level: 3, label: "Dobre" };
+  return { level: 4, label: "Bardzo silne" };
+}
+
 export default function RejestracjaPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState(0);
