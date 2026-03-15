@@ -86,6 +86,7 @@ export default function AdminPage() {
     { id: "dashboard" as Tab, label: "Dashboard", icon: BarChart3 },
     { id: "users" as Tab, label: "Użytkownicy", icon: Users },
     { id: "reports" as Tab, label: "Zgłoszenia", icon: Flag },
+    { id: "announcements" as Tab, label: "Ogłoszenia", icon: Megaphone },
   ];
 
   return (
