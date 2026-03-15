@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag, LogOut, Trash2 } from "lucide-react";
+import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag, LogOut, Trash2, Mail, UserPlus, UserCheck, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
@@ -41,6 +41,87 @@ const voivodeshipLabels: Record<string, string> = {
   "warminsko-mazurskie": "Warmińsko-Mazurskie", wielkopolskie: "Wielkopolskie",
   zachodniopomorskie: "Zachodniopomorskie",
 };
+
+function FriendButton({ userId, currentUserId }: { userId: string; currentUserId: string }) {
+  const [status, setStatus] = useState<"none" | "pending_sent" | "pending_received" | "friends" | "loading">("loading");
+
+  useEffect(() => {
+    const check = async () => {
+      const { data: friendship } = await supabase
+        .from("friendships")
+        .select("id")
+        .or(`and(user_a.eq.${currentUserId},user_b.eq.${userId}),and(user_a.eq.${userId},user_b.eq.${currentUserId})`)
+        .maybeSingle();
+      if (friendship) { setStatus("friends"); return; }
+
+      const { data: sentReq } = await supabase
+        .from("friend_requests")
+        .select("id")
+        .eq("sender_id", currentUserId)
+        .eq("receiver_id", userId)
+        .eq("status", "PENDING")
+        .maybeSingle();
+      if (sentReq) { setStatus("pending_sent"); return; }
+
+      const { data: recvReq } = await supabase
+        .from("friend_requests")
+        .select("id")
+        .eq("sender_id", userId)
+        .eq("receiver_id", currentUserId)
+        .eq("status", "PENDING")
+        .maybeSingle();
+      if (recvReq) { setStatus("pending_received"); return; }
+
+      setStatus("none");
+    };
+    check();
+  }, [userId, currentUserId]);
+
+  const sendRequest = async () => {
+    setStatus("pending_sent");
+    await supabase.from("friend_requests").insert({ sender_id: currentUserId, receiver_id: userId });
+  };
+
+  const acceptRequest = async () => {
+    await supabase.from("friend_requests").update({ status: "ACCEPTED" }).eq("sender_id", userId).eq("receiver_id", currentUserId);
+    const [a, b] = [currentUserId, userId].sort();
+    await supabase.from("friendships").insert({ user_a: a, user_b: b });
+    setStatus("friends");
+  };
+
+  const removeFriend = async () => {
+    await supabase.from("friendships").delete().or(`and(user_a.eq.${currentUserId},user_b.eq.${userId}),and(user_a.eq.${userId},user_b.eq.${currentUserId})`);
+    setStatus("none");
+  };
+
+  if (status === "loading") return null;
+  if (status === "friends") {
+    return (
+      <Button variant="outline" size="sm" onClick={removeFriend} className="gap-1.5 text-green-500 border-green-500/30">
+        <UserCheck className="w-3.5 h-3.5" /> Znajomi
+      </Button>
+    );
+  }
+  if (status === "pending_sent") {
+    return (
+      <Button variant="outline" size="sm" disabled className="gap-1.5 opacity-60">
+        <Clock className="w-3.5 h-3.5" /> Wysłano
+      </Button>
+    );
+  }
+  if (status === "pending_received") {
+    return (
+      <Button variant="outline" size="sm" onClick={acceptRequest} className="gap-1.5 text-primary">
+        <UserPlus className="w-3.5 h-3.5" /> Akceptuj
+      </Button>
+    );
+  }
+  return (
+    <Button variant="outline" size="sm" onClick={sendRequest} className="gap-1.5">
+      <UserPlus className="w-3.5 h-3.5" /> Dodaj
+    </Button>
+  );
+}
 
 export default function ProfilPage() {
   const { username: paramUsername } = useParams<{ username: string }>();
@@ -259,14 +340,25 @@ export default function ProfilPage() {
                 </Button>
               )}
               {!isOwnProfile && user && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/zglos-problem?type=user&target=${profile.username}`)}
-                  className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
-                >
-                  <Flag className="w-3.5 h-3.5" /> Zgłoś
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/wiadomosci?with=${profile.user_id}`)}
+                    className="gap-1.5"
+                  >
+                    <Mail className="w-3.5 h-3.5" /> Napisz
+                  </Button>
+                  <FriendButton userId={profile.user_id} currentUserId={user.id} />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/zglos-problem?type=user&target=${profile.username}`)}
+                    className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+                  >
+                    <Flag className="w-3.5 h-3.5" /> Zgłoś
+                  </Button>
+                </div>
               )}
               {isOwnProfile && editing && (
                 <div className="flex gap-2">

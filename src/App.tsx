@@ -32,6 +32,7 @@ import ErrorAuth from "./pages/ErrorAuth.tsx";
 import Profil from "./pages/Profil.tsx";
 import Szukaj from "./pages/Szukaj.tsx";
 import Admin from "./pages/Admin.tsx";
+import Wiadomosci from "./pages/Wiadomosci.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ function AnimatedRoutes() {
         <Route path="/profil" element={<PageTransition><Profil /></PageTransition>} />
         <Route path="/profil/:username" element={<PageTransition><Profil /></PageTransition>} />
         <Route path="/szukaj" element={<PageTransition><Szukaj /></PageTransition>} />
+        <Route path="/wiadomosci" element={<PageTransition><Wiadomosci /></PageTransition>} />
         <Route path="/administracja" element={<PageTransition><Admin /></PageTransition>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

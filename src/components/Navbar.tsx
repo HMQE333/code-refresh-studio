@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield, Sun, Moon, Info } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield, Sun, Moon, Info, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -114,6 +114,13 @@ export default function Navbar() {
                     Admin
                   </Link>
                 )}
+                <Link
+                  to="/wiadomosci"
+                  className="p-2 rounded-xl text-foreground-2 hover:text-foreground hover:bg-background-3 transition-colors"
+                  title="Wiadomości"
+                >
+                  <Mail size={16} />
+                </Link>
                 <Link
                   to="/profil"
                   className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
