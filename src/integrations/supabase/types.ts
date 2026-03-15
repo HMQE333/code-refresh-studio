@@ -506,6 +506,7 @@ export type Database = {
           tag: string | null
           title: string
           updated_at: string
+          view_count: number
         }
         Insert: {
           author_id: string
@@ -518,6 +519,7 @@ export type Database = {
           tag?: string | null
           title: string
           updated_at?: string
+          view_count?: number
         }
         Update: {
           author_id?: string
@@ -530,6 +532,7 @@ export type Database = {
           tag?: string | null
           title?: string
           updated_at?: string
+          view_count?: number
         }
         Relationships: [
           {
