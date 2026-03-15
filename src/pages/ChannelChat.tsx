@@ -34,6 +34,7 @@ type ProfileInfo = { username: string | null; avatar_url: string | null };
 export default function ChannelChatPage() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
