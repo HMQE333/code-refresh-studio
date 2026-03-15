@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ReportReason = {
   value: string;
@@ -26,30 +28,65 @@ const reportReasons: ReportReason[] = [
 ];
 
 export default function ZglosProblemPage() {
-  const [reportType, setReportType] = useState("");
-  const [reportTitle, setReportTitle] = useState("");
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const [reportType, setReportType] = useState(searchParams.get("type") || "");
+  const [reportTitle, setReportTitle] = useState(
+    searchParams.get("target") ? `Zgłoszenie użytkownika ${searchParams.get("target")}` : ""
+  );
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
 
   const quickReasons = useMemo(() => reportReasons.slice(0, 4), []);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const data = new FormData(e.currentTarget);
     const reason = String(data.get("reportType") ?? "").trim();
     const title = String(data.get("reportTitle") ?? "").trim();
+    const description = String(data.get("content") ?? "").trim();
+    const context = String(data.get("context") ?? "").trim();
+    const attachmentUrl = String(data.get("attachmentUrl") ?? "").trim();
 
     if (!reason || !title) {
       setError("Uzupełnij rodzaj i tytuł zgłoszenia.");
       return;
     }
 
+    if (!user) {
+      setError("Musisz być zalogowany, aby wysłać zgłoszenie.");
+      return;
+    }
+
     setStatus("submitting");
-    // Mock — no backend
-    setTimeout(() => {
-      setStatus("success");
-    }, 1200);
+
+    const fullDescription = [
+      description,
+      context ? `\n\nKontekst: ${context}` : "",
+      attachmentUrl ? `\nZrzut ekranu: ${attachmentUrl}` : "",
+    ].join("");
+
+    const { error: dbError } = await supabase.from("reports").insert({
+      title,
+      type: reason.toUpperCase(),
+      description: fullDescription || null,
+      author_id: user.id,
+      author_name: user.user_metadata?.username || user.email || null,
+      target_type: searchParams.get("type") || null,
+      target_id: searchParams.get("target") || null,
+    });
+
+    if (dbError) {
+      setError("Nie udało się zapisać zgłoszenia. Spróbuj ponownie.");
+      setStatus("idle");
+      return;
+    }
+
+    setStatus("success");
+    setReportType("");
+    setReportTitle("");
+    e.currentTarget.reset();
   };
 
   return (
@@ -63,7 +100,7 @@ export default function ZglosProblemPage() {
             <span className="text-foreground">Zgłoś problem</span>
           </div>
 
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2 mb-2">
             <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">Wsparcie</span>
             <span className="px-2 py-0.5 rounded text-xs font-medium border border-border text-muted-foreground">Bez nachodzenia</span>
           </div>
@@ -122,6 +159,12 @@ export default function ZglosProblemPage() {
             <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               Dziękujemy, dodaliśmy zgłoszenie do kolejki.
+            </div>
+          )}
+
+          {!user && (
+            <div className="mb-4 p-3 rounded-lg bg-muted border border-border text-sm text-muted-foreground">
+              <Link to="/logowanie" className="text-primary hover:underline font-medium">Zaloguj się</Link>, aby wysłać zgłoszenie.
             </div>
           )}
 
@@ -201,7 +244,7 @@ export default function ZglosProblemPage() {
               >
                 Wyczyść
               </button>
-              <Button type="submit" disabled={status === "submitting"}>
+              <Button type="submit" disabled={status === "submitting" || !user}>
                 {status === "submitting" ? "Wysyłanie..." : "Wyślij zgłoszenie"}
               </Button>
             </div>
