@@ -43,6 +43,9 @@ export default function ThreadDetailPage() {
     }
     setThread(data);
 
+    // Increment view count (fire-and-forget)
+    supabase.rpc("increment_thread_views" as any, { thread_id: threadId }).then(() => {});
+
     // Get board name
     if (data.board_id) {
       const { data: board } = await supabase.from("boards").select("name").eq("id", data.board_id).maybeSingle();

@@ -574,6 +574,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_thread_views: {
+        Args: { thread_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
