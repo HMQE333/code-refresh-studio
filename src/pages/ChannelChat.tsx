@@ -190,7 +190,7 @@ export default function ChannelChatPage() {
       </div>
 
       {/* Messages */}
-      <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar px-4 py-6">
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-12">
