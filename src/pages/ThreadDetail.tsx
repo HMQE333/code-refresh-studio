@@ -260,6 +260,15 @@ export default function ThreadDetailPage() {
                   <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
                   {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
                 </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link skopiowany!");
+                  }}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Share2 className="w-4 h-4" /> Udostępnij
+                </button>
                 {user?.id === thread.author_id && !editing && (
                   <button
                     onClick={() => {
