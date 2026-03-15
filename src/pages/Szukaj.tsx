@@ -206,6 +206,7 @@ export default function SzukajPage() {
                   {users.map((u) => (
                     <Link key={u.user_id} to={`/profil/${u.username}`} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:border-primary/30 transition-colors">
                       <Avatar className="w-10 h-10">
+                        <AvatarImage src={u.avatar_url || undefined} />
                         <AvatarFallback className="bg-secondary text-foreground text-sm">
                           {(u.username ?? "?").slice(0, 2).toUpperCase()}
                         </AvatarFallback>

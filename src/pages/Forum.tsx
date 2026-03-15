@@ -261,6 +261,7 @@ export default function ForumPage() {
                 liked={thread.liked}
                 tag={thread.tag}
                 isPinned={thread.is_pinned}
+                viewCount={(thread as any).view_count ?? 0}
                 onClick={() => navigate(`/forum/${thread.id}`)}
                 onLike={() => handleLike(thread.id)}
               />
