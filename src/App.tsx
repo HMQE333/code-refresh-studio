@@ -49,6 +49,7 @@ const App = () => (
                 <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
                 <Route path="/dyskusje" element={<Dyskusje />} />
                 <Route path="/forum" element={<Forum />} />
+                <Route path="/forum/:threadId" element={<ThreadDetail />} />
                 <Route path="/galeria" element={<Galeria />} />
                 <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
                 <Route path="/reset-hasla" element={<ResetHasla />} />
