@@ -1,8 +1,18 @@
+import Hero from "@/components/home/Hero";
+import Statistics from "@/components/home/Statistics";
+import WhyUs from "@/components/home/WhyUs";
+import Reviews from "@/components/home/Reviews";
+import BottomCTA from "@/components/home/BottomCTA";
+
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <p className="text-muted-foreground">Ready to build.</p>
-    </div>
+    <>
+      <Hero />
+      <Statistics />
+      <WhyUs />
+      <Reviews />
+      <BottomCTA />
+    </>
   );
 };
 
