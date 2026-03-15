@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Users, Flag, MessageSquare, Images, FileText,
-  Shield, BarChart3, Search, Ban, Clock, Trash2
+  Shield, BarChart3, Search, Ban, Clock, Trash2, Megaphone, Plus, Pencil
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import { toast } from "@/components/ui/sonner";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-type Tab = "dashboard" | "users" | "reports";
+type Tab = "dashboard" | "users" | "reports" | "announcements";
 
 type Stats = {
   users: number;
@@ -86,6 +87,7 @@ export default function AdminPage() {
     { id: "dashboard" as Tab, label: "Dashboard", icon: BarChart3 },
     { id: "users" as Tab, label: "Użytkownicy", icon: Users },
     { id: "reports" as Tab, label: "Zgłoszenia", icon: Flag },
+    { id: "announcements" as Tab, label: "Ogłoszenia", icon: Megaphone },
   ];
 
   return (
@@ -119,6 +121,7 @@ export default function AdminPage() {
         {tab === "dashboard" && <DashboardTab />}
         {tab === "users" && <UsersTab isAdmin={isAdmin} />}
         {tab === "reports" && <ReportsTab isAdmin={isAdmin} />}
+        {tab === "announcements" && isAdmin && <AnnouncementsTab />}
       </div>
     </div>
   );
@@ -397,7 +400,7 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div>
-      <div className="flex gap-2 mb-4 overflow-x-auto">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {["ALL", "PENDING", "IN_REVIEW", "RESOLVED", "REJECTED"].map((s) => (
           <button
             key={s}
@@ -463,6 +466,141 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type AnnouncementRow = {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  published: boolean;
+  created_at: string;
+};
+
+function AnnouncementsTab() {
+  const { user } = useAuth();
+  const [items, setItems] = useState<AnnouncementRow[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editItem, setEditItem] = useState<AnnouncementRow | null>(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("ogloszenia");
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false });
+    setItems(data || []);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const resetForm = () => {
+    setTitle(""); setContent(""); setCategory("ogloszenia");
+    setEditItem(null); setShowForm(false);
+  };
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim() || !user) return;
+    setSaving(true);
+    if (editItem) {
+      await supabase.from("announcements").update({ title: title.trim(), content: content.trim(), category }).eq("id", editItem.id);
+      toast.success("Ogłoszenie zaktualizowane.");
+    } else {
+      await supabase.from("announcements").insert({ title: title.trim(), content: content.trim(), category, author_id: user.id });
+      toast.success("Ogłoszenie dodane.");
+    }
+    setSaving(false);
+    resetForm();
+    load();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Usunąć ogłoszenie?")) return;
+    await supabase.from("announcements").delete().eq("id", id);
+    toast.success("Ogłoszenie usunięte.");
+    load();
+  };
+
+  const togglePublished = async (item: AnnouncementRow) => {
+    await supabase.from("announcements").update({ published: !item.published }).eq("id", item.id);
+    load();
+  };
+
+  const startEdit = (item: AnnouncementRow) => {
+    setEditItem(item);
+    setTitle(item.title);
+    setContent(item.content);
+    setCategory(item.category);
+    setShowForm(true);
+  };
+
+  const categoryLabels: Record<string, string> = {
+    ogloszenia: "Ogłoszenia", aktualnosci: "Aktualności", konkursy: "Konkursy",
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-foreground">Zarządzanie ogłoszeniami</h2>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1.5">
+          <Plus className="w-3.5 h-3.5" /> Dodaj
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-xl border border-border bg-card p-5 mb-6 space-y-4">
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tytuł ogłoszenia" />
+          <Textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Treść..." rows={4} />
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <option value="ogloszenia">Ogłoszenia</option>
+            <option value="aktualnosci">Aktualności</option>
+            <option value="konkursy">Konkursy</option>
+          </select>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={saving || !title.trim() || !content.trim()}>
+              {saving ? "Zapisywanie..." : editItem ? "Zaktualizuj" : "Opublikuj"}
+            </Button>
+            <Button variant="outline" onClick={resetForm}>Anuluj</Button>
+          </div>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">Brak ogłoszeń</p>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <div key={item.id} className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                    <Badge variant="secondary" className="text-[10px]">{categoryLabels[item.category] || item.category}</Badge>
+                    <Badge variant={item.published ? "default" : "outline"} className="text-[10px]">
+                      {item.published ? "Opublikowane" : "Szkic"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{item.content}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{formatTimeAgo(item.created_at)}</p>
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  <Button size="sm" variant="ghost" onClick={() => togglePublished(item)} className="text-xs h-7">
+                    {item.published ? "Ukryj" : "Opublikuj"}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => startEdit(item)} className="text-xs h-7">
+                    <Pencil className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)} className="text-xs h-7 text-destructive hover:text-destructive">
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               </div>
             </div>

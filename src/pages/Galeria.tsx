@@ -232,6 +232,19 @@ export default function GaleriaPage() {
                   <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MessageCircle className="w-4 h-4" /> {comments.length}
                   </span>
+                  {user && lightbox.author_id === user.id && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Usunąć to zdjęcie?")) return;
+                        await supabase.from("gallery_items").delete().eq("id", lightbox.id);
+                        setLightbox(null);
+                        loadItems();
+                      }}
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                    >
+                      <Trash2 className="w-4 h-4" /> Usuń
+                    </button>
+                  )}
                 </div>
               </div>
               {/* Comments */}
