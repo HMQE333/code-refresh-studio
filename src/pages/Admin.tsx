@@ -973,3 +973,71 @@ function GalleryAdminTab() {
     </div>
   );
 }
+
+function LogsTab() {
+  const [logs, setLogs] = useState<{ id: string; message: string; level: string; actor_id: string | null; context: string | null; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("admin_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .then(({ data }) => {
+        setLogs(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold text-foreground mb-4">Logi administracyjne</h2>
+      {logs.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <ScrollText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">Brak logów</p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left p-3 font-medium text-muted-foreground">Czas</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Poziom</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Wiadomość</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Kontekst</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id} className="border-b border-border last:border-0">
+                    <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleString("pl-PL")}
+                    </td>
+                    <td className="p-3">
+                      <Badge variant={log.level === "ERROR" ? "destructive" : log.level === "WARN" ? "secondary" : "outline"} className="text-[10px]">
+                        {log.level}
+                      </Badge>
+                    </td>
+                    <td className="p-3 text-foreground">{log.message}</td>
+                    <td className="p-3 text-xs text-muted-foreground max-w-[200px] truncate">{log.context || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
