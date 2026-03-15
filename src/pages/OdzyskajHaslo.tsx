@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -10,7 +11,7 @@ export default function OdzyskajHasloPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!email.trim()) {
@@ -22,10 +23,15 @@ export default function OdzyskajHasloPage() {
       return;
     }
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccess(true);
-    }, 1200);
+    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-hasla`,
+    });
+    setIsSubmitting(false);
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
+    setSuccess(true);
   };
 
   return (
@@ -43,25 +49,13 @@ export default function OdzyskajHasloPage() {
                   Podaj adres e-mail powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.
                 </p>
               </div>
-
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                  {error}
-                </div>
+                <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">{error}</div>
               )}
-
               <form onSubmit={onSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="text-sm font-medium text-foreground mb-1.5 block">
-                    Adres e-mail
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="twoj@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <label htmlFor="email" className="text-sm font-medium text-foreground mb-1.5 block">Adres e-mail</label>
+                  <Input id="email" type="email" placeholder="twoj@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? "Wysyłanie..." : "Wyślij link resetowania"}
@@ -79,14 +73,9 @@ export default function OdzyskajHasloPage() {
               </p>
             </div>
           )}
-
           <div className="mt-6 text-center">
-            <Link
-              to="/logowanie"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Wróć do logowania
+            <Link to="/logowanie" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+              <ArrowLeft className="w-4 h-4" /> Wróć do logowania
             </Link>
           </div>
         </div>
