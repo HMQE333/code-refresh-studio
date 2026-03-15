@@ -37,6 +37,7 @@ type GalleryComment = {
 
 export default function GaleriaPage() {
   const { user } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [category, setCategory] = useState("Wszystkie");
   const [loading, setLoading] = useState(true);
