@@ -143,6 +143,8 @@ export default function ForumPage() {
       result.sort((a, b) => b.likes - a.likes);
     } else if (activeSort === "comments") {
       result.sort((a, b) => b.comments - a.comments);
+    } else if (activeSort === "unanswered") {
+      result = result.filter((t) => t.comments === 0);
     }
 
     if (append) {
