@@ -1,5 +1,6 @@
 import { Heart, MessageSquare, Tag } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeAgo } from "@/lib/timeAgo";
 
@@ -14,27 +15,46 @@ interface PostCardProps {
   comments: number;
   liked?: boolean;
   tag?: string | null;
+  isPinned?: boolean;
   onClick: () => void;
   onLike: () => void;
 }
 
 export default function PostCard({
-  author, createdAt, title, content, likes, comments, liked, tag, onClick, onLike,
+  author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, onClick, onLike,
 }: PostCardProps) {
   return (
     <article
       onClick={onClick}
-      className="rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 interactive-press cursor-pointer"
+      className={`rounded-xl border bg-card p-5 transition-all hover:border-primary/30 interactive-press cursor-pointer ${
+        isPinned ? "border-primary/40 bg-primary/5" : "border-border"
+      }`}
     >
       <div className="flex gap-4">
-        <Avatar className="w-10 h-10 mt-1 shrink-0">
-          <AvatarFallback className="bg-secondary text-foreground text-sm">
-            {author.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link
+          to={`/profil/${author}`}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0"
+        >
+          <Avatar className="w-10 h-10 mt-1">
+            <AvatarImage src={avatarUrl || undefined} />
+            <AvatarFallback className="bg-secondary text-foreground text-sm">
+              {author.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-sm font-medium text-primary">{author}</span>
+            {isPinned && (
+              <Badge variant="default" className="text-[10px] px-1.5 py-0">📌 Przypięty</Badge>
+            )}
+            <Link
+              to={`/profil/${author}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {author}
+            </Link>
             <span className="text-xs text-muted-foreground">• {formatTimeAgo(createdAt)}</span>
             {tag && (
               <Badge variant="secondary" className="text-xs gap-1">

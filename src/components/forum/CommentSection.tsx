@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Send, Heart } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -41,14 +42,19 @@ export default function CommentSection({ comments, onAddComment, onLikeComment }
 
   const renderComment = (comment: CommentData, isReply = false) => (
     <div key={comment.id} className={`flex gap-3 ${isReply ? "ml-10 mt-3" : "mt-4"}`}>
-      <Avatar className="w-8 h-8 shrink-0">
-        <AvatarFallback className="bg-secondary text-foreground text-xs">
-          {comment.author.slice(0, 2).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <Link to={`/profil/${comment.author}`} className="shrink-0">
+        <Avatar className="w-8 h-8">
+          <AvatarImage src={comment.avatarUrl || undefined} />
+          <AvatarFallback className="bg-secondary text-foreground text-xs">
+            {comment.author.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium text-primary">{comment.author}</span>
+          <Link to={`/profil/${comment.author}`} className="text-sm font-medium text-primary hover:underline">
+            {comment.author}
+          </Link>
           <span className="text-xs text-muted-foreground">{formatTimeAgo(comment.createdAt)}</span>
         </div>
         <p className="text-sm text-foreground/90">{comment.content}</p>

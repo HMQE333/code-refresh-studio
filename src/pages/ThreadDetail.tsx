@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft, Heart, Pin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import CommentSection, { CommentData } from "@/components/forum/CommentSection";
@@ -18,6 +18,7 @@ export default function ThreadDetailPage() {
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [boardName, setBoardName] = useState<string | null>(null);
 
   const loadThread = useCallback(async () => {
     if (!threadId) return;
@@ -32,6 +33,12 @@ export default function ThreadDetailPage() {
       return;
     }
     setThread(data);
+
+    // Get board name
+    if (data.board_id) {
+      const { data: board } = await supabase.from("boards").select("name").eq("id", data.board_id).maybeSingle();
+      setBoardName(board?.name || null);
+    }
 
     // Get like count
     const { count } = await supabase
@@ -161,10 +168,22 @@ export default function ThreadDetailPage() {
   if (!thread) return null;
 
   const authorName = thread.profiles?.username ?? "Anonim";
+  const authorAvatar = thread.profiles?.avatar_url;
 
   return (
     <div className="min-h-screen bg-background py-16 px-4">
       <div className="max-w-3xl mx-auto">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+          <Link to="/forum" className="hover:text-primary transition-colors">Forum</Link>
+          {boardName && (
+            <>
+              <span>›</span>
+              <span className="text-foreground">{boardName}</span>
+            </>
+          )}
+        </div>
+
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -174,14 +193,24 @@ export default function ThreadDetailPage() {
 
         <article className="rounded-2xl border border-border bg-card p-6">
           <div className="flex gap-4">
-            <Avatar className="w-12 h-12 shrink-0">
-              <AvatarFallback className="bg-secondary text-foreground">
-                {authorName.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Link to={`/profil/${authorName}`} className="shrink-0">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={authorAvatar || undefined} />
+                <AvatarFallback className="bg-secondary text-foreground">
+                  {authorName.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="text-sm font-medium text-primary">{authorName}</span>
+                {thread.is_pinned && (
+                  <Badge variant="default" className="text-[10px] px-1.5 py-0 gap-1">
+                    <Pin className="w-2.5 h-2.5" /> Przypięty
+                  </Badge>
+                )}
+                <Link to={`/profil/${authorName}`} className="text-sm font-medium text-primary hover:underline">
+                  {authorName}
+                </Link>
                 <span className="text-xs text-muted-foreground">• {formatTimeAgo(thread.created_at)}</span>
                 {thread.tag && <Badge variant="secondary" className="text-xs">{thread.tag}</Badge>}
               </div>
