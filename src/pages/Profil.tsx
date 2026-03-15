@@ -473,6 +473,9 @@ export default function ProfilPage() {
           </div>
         </div>
 
+        {/* Friends list */}
+        <FriendsList userId={profile.user_id} />
+
         {/* Recent threads */}
         {recentThreads.length > 0 && (
           <div className="rounded-2xl border border-border bg-card p-6">
