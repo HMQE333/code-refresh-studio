@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/sonner";
 export default function ThreadDetailPage() {
   const { threadId } = useParams<{ threadId: string }>();
   const { user } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
   const navigate = useNavigate();
   const [thread, setThread] = useState<any>(null);
   const [comments, setComments] = useState<CommentData[]>([]);
