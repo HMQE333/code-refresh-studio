@@ -48,7 +48,7 @@ const sections: PolicySection[] = [
     bullets: [
       "Prawo dostępu do danych.",
       "Prawo do sprostowania danych.",
-      "Prawo do usunięcia danych („prawo do bycia zapomnianym").",
+      'Prawo do usunięcia danych (\u201Eprawo do bycia zapomnianym\u201D).',
       "Prawo do ograniczenia przetwarzania.",
       "Prawo do przenoszenia danych.",
       "Prawo sprzeciwu wobec przetwarzania.",
