@@ -83,10 +83,13 @@ export default function ForumPage() {
     const { data: threadsData } = await query;
 
     if (!threadsData || threadsData.length === 0) {
-      setThreads([]);
+      if (!append) setThreads([]);
+      setHasMore(false);
       setLoading(false);
       return;
     }
+
+    setHasMore(threadsData.length > PAGE_SIZE);
 
     const threadIds = threadsData.map((t: any) => t.id);
 
