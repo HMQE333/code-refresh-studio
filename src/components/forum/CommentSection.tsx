@@ -118,6 +118,15 @@ export default function CommentSection({ comments, onAddComment, onLikeComment, 
               <Trash2 className="w-3 h-3" />
             </button>
           )}
+          {user && comment.authorId !== user.id && (
+            <button
+              onClick={() => navigate(`/zglos-problem?type=comment&target=${comment.id}`)}
+              className="hover:text-foreground transition-colors"
+              title="Zgłoś komentarz"
+            >
+              <Flag className="w-3 h-3" />
+            </button>
+          )}
         </div>
         {replies(comment.id).map((r) => renderComment(r, true))}
       </div>
