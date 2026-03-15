@@ -26,11 +26,13 @@ interface CommentSectionProps {
   canModerate?: boolean;
 }
 
-export default function CommentSection({ comments, onAddComment, onLikeComment, onDeleteComment, canModerate }: CommentSectionProps) {
+export default function CommentSection({ comments, onAddComment, onLikeComment, onDeleteComment, onEditComment, canModerate }: CommentSectionProps) {
   const { user } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
