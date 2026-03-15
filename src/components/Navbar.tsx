@@ -4,6 +4,8 @@ import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type NavItem = {
   label: string;
@@ -25,6 +27,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin, isModerator } = useUserRole();
+  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; display_name: string | null } | null>(null);
 
   const isActive = (href: string) => {
     return href === "/" ? location.pathname === "/" : location.pathname.startsWith(href);
@@ -39,6 +42,13 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!user) { setProfile(null); return; }
+    supabase.from("profiles").select("username, avatar_url, display_name").eq("user_id", user.id).maybeSingle().then(({ data }) => setProfile(data));
+  }, [user]);
+
+  const avatarInitials = (profile?.display_name || profile?.username || "?").slice(0, 2).toUpperCase();
 
   return (
     <nav
@@ -96,15 +106,19 @@ export default function Navbar() {
                   to="/profil"
                   className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
                 >
-                  <User size={16} />
-                  Profil
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-secondary text-foreground text-[10px]">
+                      {avatarInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  {profile?.display_name || profile?.username || "Profil"}
                 </Link>
                 <button
                   onClick={signOut}
                   className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
                 >
                   <LogOut size={16} />
-                  Wyloguj
                 </button>
               </>
             ) : (
@@ -177,8 +191,13 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 text-sm font-medium text-foreground-2 hover:text-foreground px-3 py-3 rounded-xl transition-colors"
                   >
-                    <User size={18} />
-                    Profil
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-secondary text-foreground text-[10px]">
+                        {avatarInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    {profile?.display_name || profile?.username || "Profil"}
                   </Link>
                   <button
                     onClick={() => { signOut(); setMobileOpen(false); }}

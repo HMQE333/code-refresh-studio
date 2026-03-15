@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera } from "lucide-react";
+import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { formatTimeAgo } from "@/lib/timeAgo";
 
 type Profile = {
   id: string;
@@ -26,6 +27,8 @@ type Profile = {
 type Region = { id: string; name: string };
 type FishingMethod = { id: string; name: string };
 type Rank = { id: string; name: string; color: string | null; min_posts: number };
+type RecentThread = { id: string; title: string; created_at: string };
+type RecentGallery = { id: string; title: string; image_url: string; created_at: string };
 
 const voivodeshipLabels: Record<string, string> = {
   dolnoslaskie: "Dolnośląskie", "kujawsko-pomorskie": "Kujawsko-Pomorskie",
@@ -51,6 +54,8 @@ export default function ProfilPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ threads: 0, posts: 0, messages: 0 });
+  const [recentThreads, setRecentThreads] = useState<RecentThread[]>([]);
+  const [recentGallery, setRecentGallery] = useState<RecentGallery[]>([]);
 
   const [formData, setFormData] = useState({
     display_name: "", bio: "", age: "", region_id: "", fishing_method_id: "",
@@ -88,16 +93,20 @@ export default function ProfilPage() {
         });
 
         const userId = profileRes.data.user_id;
-        const [threadsRes, postsRes, msgsRes] = await Promise.all([
+        const [threadsRes, postsRes, msgsRes, recentThreadsRes, recentGalleryRes] = await Promise.all([
           supabase.from("threads").select("id", { count: "exact", head: true }).eq("author_id", userId),
           supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", userId),
           supabase.from("channel_messages").select("id", { count: "exact", head: true }).eq("author_id", userId),
+          supabase.from("threads").select("id, title, created_at").eq("author_id", userId).is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
+          supabase.from("gallery_items").select("id, title, image_url, created_at").eq("author_id", userId).order("created_at", { ascending: false }).limit(6),
         ]);
         setStats({
           threads: threadsRes.count ?? 0,
           posts: postsRes.count ?? 0,
           messages: msgsRes.count ?? 0,
         });
+        setRecentThreads(recentThreadsRes.data || []);
+        setRecentGallery(recentGalleryRes.data || []);
       }
       setRegions(regionsRes.data || []);
       setMethods(methodsRes.data || []);
@@ -182,7 +191,8 @@ export default function ProfilPage() {
 
   return (
     <div className="min-h-screen bg-background py-16 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Main profile card */}
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           {/* Banner */}
           <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
@@ -332,6 +342,45 @@ export default function ProfilPage() {
             </div>
           </div>
         </div>
+
+        {/* Recent threads */}
+        {recentThreads.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold text-foreground">Ostatnie wątki</h2>
+            </div>
+            <div className="space-y-2">
+              {recentThreads.map((t) => (
+                <Link
+                  key={t.id}
+                  to={`/forum/${t.id}`}
+                  className="flex items-center justify-between rounded-xl border border-border bg-background p-3 hover:border-primary/30 transition-colors"
+                >
+                  <span className="text-sm font-medium text-foreground truncate mr-3">{t.title}</span>
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">{formatTimeAgo(t.created_at)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent gallery */}
+        {recentGallery.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Images className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold text-foreground">Ostatnie zdjęcia</h2>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {recentGallery.map((g) => (
+                <Link key={g.id} to="/galeria" className="group aspect-square rounded-lg overflow-hidden border border-border">
+                  <img src={g.image_url} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
