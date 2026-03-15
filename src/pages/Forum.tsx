@@ -40,6 +40,8 @@ export default function ForumPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
 
   // Load user count
