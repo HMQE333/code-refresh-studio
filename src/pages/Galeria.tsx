@@ -370,6 +370,16 @@ function LightboxView({
               <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Udostępnij">
                 <Share2 className="w-4 h-4" />
               </button>
+              {user && !isOwnItem && (
+                <Link
+                  to={`/zglos-problem?type=gallery&target=${item.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-orange-400 transition-colors"
+                  title="Zgłoś"
+                >
+                  <Flag className="w-4 h-4" />
+                </Link>
+              )}
               {user && (item.author_id === user.id || isAdmin || isModerator) && (
                 <button onClick={onDelete} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto">
                   <Trash2 className="w-4 h-4" />
