@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Fish, MessageSquare, Images, HelpCircle, Shield, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const footerLinks = [
   {
@@ -35,12 +35,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <Fish className="h-6 w-6 text-primary" />
-              <span className="text-lg font-semibold text-foreground">
-                Rybia<span className="text-primary">Paka</span>
-                <span className="text-foreground-2 text-xs">.pl</span>
-              </span>
+            <Link to="/" className="flex items-center mb-4">
+              <img src="/logo.png" alt="RybiaPaka.pl" className="h-6" />
             </Link>
             <p className="text-sm text-foreground-2 leading-relaxed">
               Największa społeczność wędkarska w Polsce. Dziel się pasją, wymieniaj doświadczenia.

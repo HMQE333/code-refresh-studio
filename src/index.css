@@ -122,6 +122,19 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
 }
 
+.interactive-press {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+}
+
+.interactive-press:hover {
+  transform: translateY(-2px);
+}
+
+.interactive-press:active {
+  transform: scale(0.97);
+}
+
 .shimmer-accent {
   background-image: linear-gradient(120deg, hsl(120 100% 40% / 0.1), hsl(120 100% 26% / 0.3), hsl(120 100% 40% / 0.1));
   background-size: 200% 200%;
@@ -131,6 +144,33 @@
 @keyframes shimmer-accent {
   0% { background-position: 0% 50%; }
   100% { background-position: 120% 50%; }
+}
+
+@keyframes partner-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-partner-pop {
+  animation: partner-pop 400ms ease both;
+}
+
+.page-transition {
+  animation: page-fade 300ms ease both;
+}
+
+@keyframes page-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-pill {
+  transition: all 200ms ease;
+}
+
+.filter-pill:hover {
+  box-shadow: 0 0 12px hsl(120 100% 40% / 0.2);
 }
 
 @keyframes marquee {
