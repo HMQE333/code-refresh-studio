@@ -29,6 +29,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin, isModerator } = useUserRole();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; display_name: string | null } | null>(null);
 
   const isActive = (href: string) => {
