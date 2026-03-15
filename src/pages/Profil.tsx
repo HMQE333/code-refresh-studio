@@ -372,13 +372,24 @@ export default function ProfilPage() {
               )}
             </div>
 
-            {/* Rank badge */}
-            {rank && (
-              <div className="mb-4">
+            {/* Rank badge + Share */}
+            <div className="flex items-center gap-2 mb-4">
+              {rank && (
                 <Badge variant="secondary" className="gap-1.5 px-3 py-1" style={{ color: rank.color || undefined }}>
                   <User className="w-3 h-3" /> {rank.name}
                 </Badge>
-              </div>
+              )}
+              <button
+                onClick={async () => {
+                  const url = `${window.location.origin}/profil/${profile.username}`;
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Link do profilu skopiowany!");
+                }}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto"
+              >
+                <Share2 className="w-3.5 h-3.5" /> Udostępnij
+              </button>
+            </div>
             )}
 
             {/* Edit / View mode */}
