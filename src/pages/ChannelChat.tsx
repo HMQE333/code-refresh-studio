@@ -21,6 +21,28 @@ const CHANNEL_META: Record<string, { name: string; summary: string }> = {
   gry: { name: "Gry", summary: "Gry wędkarskie, nowości, patche i wspólne wypady online." },
 };
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+function LinkifyText({ text, isOwn }: { text: string; isOwn: boolean }) {
+  const parts = text.split(URL_REGEX);
+  return (
+    <>
+      {parts.map((part, i) =>
+        URL_REGEX.test(part) ? (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+            className={`underline ${isOwn ? "text-primary-foreground/90 hover:text-primary-foreground" : "text-primary hover:text-primary/80"}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part.length > 50 ? part.slice(0, 47) + "..." : part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 type Message = {
   id: string;
   author_name: string | null;
@@ -205,12 +227,12 @@ export default function ChannelChatPage() {
                       </button>
                     )}
                   </div>
-                  <div className={`rounded-2xl px-4 py-2.5 text-sm ${
+                  <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
                     isOwn
                       ? "bg-primary text-primary-foreground rounded-tr-md"
                       : "bg-card border border-border text-foreground rounded-tl-md"
                   }`}>
-                    {msg.text}
+                    <LinkifyText text={msg.text} isOwn={!!isOwn} />
                   </div>
                 </div>
               </div>
