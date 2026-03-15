@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Menu, X, User, LogOut } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 type NavItem = {
   label: string;
@@ -15,6 +16,7 @@ const navItems: NavItem[] = [
   { label: "Dyskusje", href: "/dyskusje", icon: Megaphone },
   { label: "Forum", href: "/forum", icon: MessageSquare },
   { label: "Galeria", href: "/galeria", icon: Images },
+  { label: "Szukaj", href: "/szukaj", icon: Search },
 ];
 
 export default function Navbar() {
@@ -22,6 +24,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
 
   const isActive = (href: string) => {
     return href === "/" ? location.pathname === "/" : location.pathname.startsWith(href);
@@ -80,6 +83,15 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
+                {(isAdmin || isModerator) && (
+                  <Link
+                    to="/administracja"
+                    className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
+                  >
+                    <Shield size={16} />
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/profil"
                   className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
@@ -150,6 +162,16 @@ export default function Navbar() {
             <div className="pt-3 border-t border-border flex flex-col gap-2">
               {user ? (
                 <>
+                  {(isAdmin || isModerator) && (
+                    <Link
+                      to="/administracja"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 text-sm font-medium text-foreground-2 hover:text-foreground px-3 py-3 rounded-xl transition-colors"
+                    >
+                      <Shield size={18} />
+                      Admin
+                    </Link>
+                  )}
                   <Link
                     to="/profil"
                     onClick={() => setMobileOpen(false)}

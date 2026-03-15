@@ -26,6 +26,7 @@ import Odwolanie from "./pages/Odwolanie.tsx";
 import ErrorAuth from "./pages/ErrorAuth.tsx";
 import Profil from "./pages/Profil.tsx";
 import Szukaj from "./pages/Szukaj.tsx";
+import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="/profil" element={<Profil />} />
                 <Route path="/profil/:username" element={<Profil />} />
                 <Route path="/szukaj" element={<Szukaj />} />
+                <Route path="/administracja" element={<Admin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

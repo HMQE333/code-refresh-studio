@@ -1,0 +1,361 @@
+import { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Users, Flag, MessageSquare, Images, FileText,
+  Shield, BarChart3, Search, Settings
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatTimeAgo } from "@/lib/timeAgo";
+
+type Tab = "dashboard" | "users" | "reports" | "moderation";
+
+type Stats = {
+  users: number;
+  threads: number;
+  posts: number;
+  reports: number;
+  gallery: number;
+  messages: number;
+};
+
+type ProfileRow = {
+  user_id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+};
+
+type ReportRow = {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  author_name: string | null;
+  target_type: string | null;
+  target_id: string | null;
+  created_at: string;
+};
+
+type RoleRow = { user_id: string; role: string };
+
+export default function AdminPage() {
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isModerator, loading: roleLoading } = useUserRole();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const tabFromHash = (location.hash.replace("#", "") || "dashboard") as Tab;
+  const [tab, setTab] = useState<Tab>(tabFromHash);
+
+  useEffect(() => {
+    if (!authLoading && !roleLoading && (!user || (!isAdmin && !isModerator))) {
+      navigate("/", { replace: true });
+    }
+  }, [user, authLoading, roleLoading, isAdmin, isModerator, navigate]);
+
+  if (authLoading || roleLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAdmin && !isModerator) return null;
+
+  const tabs = [
+    { id: "dashboard" as Tab, label: "Dashboard", icon: BarChart3 },
+    { id: "users" as Tab, label: "Użytkownicy", icon: Users },
+    { id: "reports" as Tab, label: "Zgłoszenia", icon: Flag },
+    ...(isAdmin ? [{ id: "moderation" as Tab, label: "Moderacja", icon: Shield }] : []),
+  ];
+
+  return (
+    <div className="min-h-screen bg-background py-16 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
+          <Shield className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">Panel Administracyjny</h1>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 overflow-x-auto">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => { setTab(t.id); window.location.hash = t.id; }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  tab === t.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground border border-border hover:text-foreground"
+                }`}
+              >
+                <Icon className="w-4 h-4" /> {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === "dashboard" && <DashboardTab />}
+        {tab === "users" && <UsersTab isAdmin={isAdmin} />}
+        {tab === "reports" && <ReportsTab />}
+        {tab === "moderation" && isAdmin && <ModerationTab />}
+      </div>
+    </div>
+  );
+}
+
+function DashboardTab() {
+  const [stats, setStats] = useState<Stats>({ users: 0, threads: 0, posts: 0, reports: 0, gallery: 0, messages: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("threads").select("id", { count: "exact", head: true }),
+      supabase.from("posts").select("id", { count: "exact", head: true }),
+      supabase.from("reports").select("id", { count: "exact", head: true }),
+      supabase.from("gallery_items").select("id", { count: "exact", head: true }),
+      supabase.from("channel_messages").select("id", { count: "exact", head: true }),
+    ]).then(([u, t, p, r, g, m]) => {
+      setStats({
+        users: u.count ?? 0, threads: t.count ?? 0, posts: p.count ?? 0,
+        reports: r.count ?? 0, gallery: g.count ?? 0, messages: m.count ?? 0,
+      });
+    });
+  }, []);
+
+  const cards = [
+    { label: "Użytkownicy", value: stats.users, icon: Users },
+    { label: "Wątki", value: stats.threads, icon: FileText },
+    { label: "Komentarze", value: stats.posts, icon: MessageSquare },
+    { label: "Zgłoszenia", value: stats.reports, icon: Flag },
+    { label: "Galeria", value: stats.gallery, icon: Images },
+    { label: "Wiadomości", value: stats.messages, icon: MessageSquare },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {cards.map((c) => {
+        const Icon = c.icon;
+        return (
+          <div key={c.label} className="rounded-xl border border-border bg-card p-5">
+            <Icon className="w-5 h-5 text-primary mb-2" />
+            <p className="text-2xl font-bold text-foreground">{c.value}</p>
+            <p className="text-xs text-muted-foreground">{c.label}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function UsersTab({ isAdmin }: { isAdmin: boolean }) {
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [roles, setRoles] = useState<RoleRow[]>([]);
+  const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
+
+  const loadData = useCallback(async () => {
+    const [pRes, rRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, username, display_name, avatar_url, created_at").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
+    setProfiles(pRes.data || []);
+    setRoles(rRes.data || []);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const getRoleForUser = (userId: string) => {
+    const r = roles.find((ro) => ro.user_id === userId);
+    return r?.role || "user";
+  };
+
+  const setRole = async (userId: string, newRole: string) => {
+    setBusy((b) => ({ ...b, [userId]: true }));
+    // Remove existing role
+    await supabase.from("user_roles").delete().eq("user_id", userId);
+    if (newRole !== "user") {
+      await supabase.from("user_roles").insert({ user_id: userId, role: newRole } as any);
+    }
+    await loadData();
+    setBusy((b) => ({ ...b, [userId]: false }));
+  };
+
+  const filtered = profiles.filter((p) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (p.username?.toLowerCase().includes(q) || p.display_name?.toLowerCase().includes(q));
+  });
+
+  return (
+    <div>
+      <div className="mb-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Szukaj użytkownika..." className="pl-10" />
+        </div>
+      </div>
+      <div className="rounded-xl border border-border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-3 font-medium text-muted-foreground">Użytkownik</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Rola</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Dołączył</th>
+                {isAdmin && <th className="text-left p-3 font-medium text-muted-foreground">Akcje</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p) => {
+                const role = getRoleForUser(p.user_id);
+                return (
+                  <tr key={p.user_id} className="border-b border-border last:border-0 hover:bg-muted/10">
+                    <td className="p-3">
+                      <Link to={`/profil/${p.username}`} className="flex items-center gap-2 hover:text-primary">
+                        <Avatar className="w-7 h-7">
+                          <AvatarFallback className="bg-secondary text-foreground text-xs">
+                            {(p.username ?? "?").slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-foreground">{p.display_name || p.username}</span>
+                      </Link>
+                    </td>
+                    <td className="p-3">
+                      <Badge variant={role === "admin" ? "default" : role === "moderator" ? "secondary" : "outline"}>
+                        {role}
+                      </Badge>
+                    </td>
+                    <td className="p-3 text-muted-foreground text-xs">{formatTimeAgo(p.created_at)}</td>
+                    {isAdmin && (
+                      <td className="p-3">
+                        <select
+                          value={role}
+                          onChange={(e) => setRole(p.user_id, e.target.value)}
+                          disabled={busy[p.user_id]}
+                          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                        >
+                          <option value="user">user</option>
+                          <option value="moderator">moderator</option>
+                          <option value="admin">admin</option>
+                        </select>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReportsTab() {
+  const [reports, setReports] = useState<ReportRow[]>([]);
+  const [filter, setFilter] = useState("ALL");
+
+  const loadReports = useCallback(async () => {
+    let q = supabase.from("reports").select("*").order("created_at", { ascending: false });
+    if (filter !== "ALL") q = q.eq("status", filter);
+    const { data } = await q;
+    setReports(data || []);
+  }, [filter]);
+
+  useEffect(() => { loadReports(); }, [loadReports]);
+
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from("reports").update({ status, resolved_at: status === "RESOLVED" ? new Date().toISOString() : null }).eq("id", id);
+    loadReports();
+  };
+
+  const statusColors: Record<string, string> = {
+    PENDING: "bg-yellow-500/20 text-yellow-400",
+    IN_REVIEW: "bg-blue-500/20 text-blue-400",
+    RESOLVED: "bg-green-500/20 text-green-400",
+    REJECTED: "bg-red-500/20 text-red-400",
+  };
+
+  const statusLabels: Record<string, string> = {
+    PENDING: "Nowe", IN_REVIEW: "W toku", RESOLVED: "Zamknięte", REJECTED: "Odrzucone",
+  };
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-4 overflow-x-auto">
+        {["ALL", "PENDING", "IN_REVIEW", "RESOLVED", "REJECTED"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              filter === s ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground"
+            }`}
+          >
+            {s === "ALL" ? "Wszystkie" : statusLabels[s] || s}
+          </button>
+        ))}
+      </div>
+
+      {reports.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">Brak zgłoszeń</p>
+      ) : (
+        <div className="space-y-3">
+          {reports.map((r) => (
+            <div key={r.id} className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-foreground truncate">{r.title}</h3>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[r.status] || ""}`}>
+                      {statusLabels[r.status] || r.status}
+                    </span>
+                    <Badge variant="outline" className="text-[10px]">{r.type}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{r.author_name} · {formatTimeAgo(r.created_at)}</p>
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  {r.status === "PENDING" && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, "IN_REVIEW")} className="text-xs h-7">W toku</Button>
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, "RESOLVED")} className="text-xs h-7">Zamknij</Button>
+                    </>
+                  )}
+                  {r.status === "IN_REVIEW" && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, "RESOLVED")} className="text-xs h-7">Zamknij</Button>
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, "REJECTED")} className="text-xs h-7">Odrzuć</Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModerationTab() {
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 text-center">
+      <Shield className="w-10 h-10 text-primary mx-auto mb-3" />
+      <h2 className="text-lg font-semibold text-foreground mb-2">Moderacja</h2>
+      <p className="text-sm text-muted-foreground">
+        Zarządzanie rolami użytkowników dostępne w zakładce "Użytkownicy".
+        Bany i zawieszenia zostaną dodane w przyszłej aktualizacji.
+      </p>
+    </div>
+  );
+}
