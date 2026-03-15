@@ -63,7 +63,7 @@ export default function ForumPage() {
       query = query.ilike("title", `%${searchQuery.trim()}%`);
     }
 
-    query = query.order("created_at", { ascending: false }).limit(50);
+    query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(50);
 
     const { data: threadsData } = await query;
 
