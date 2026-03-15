@@ -1,4 +1,4 @@
-import { Eye, Heart, MessageSquare, Tag } from "lucide-react";
+import { Eye, Heart, MessageSquare, Share2, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
