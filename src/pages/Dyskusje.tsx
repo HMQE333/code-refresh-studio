@@ -39,7 +39,7 @@ const CHANNELS: Channel[] = [
   { id: "gry", name: "Gry", description: "Dla graczy lubiących wędkarskie gry.", icon: Gamepad2, gradient: "from-indigo-500/20 via-indigo-500/10 to-transparent", accent: "text-indigo-200" },
 ];
 
-function ChatButton({ channel, messageCount }: { channel: Channel; messageCount: number }) {
+function ChatButton({ channel, messageCount, lastMessage }: { channel: Channel; messageCount: number; lastMessage?: { text: string; author_name: string | null; created_at: string } }) {
   const Icon = channel.icon;
   return (
     <Link
@@ -61,6 +61,12 @@ function ChatButton({ channel, messageCount }: { channel: Channel; messageCount:
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{messageCount} {messageCount === 1 ? 'wiadomość' : 'wiadomości'}</span>
           </div>
+          {lastMessage && (
+            <p className="mt-1.5 text-xs text-muted-foreground truncate">
+              <span className="font-medium text-foreground/70">{lastMessage.author_name ?? "Anonim"}:</span>{" "}
+              {lastMessage.text.length > 60 ? lastMessage.text.slice(0, 57) + "..." : lastMessage.text}
+            </p>
+          )}
         </div>
       </div>
     </Link>
