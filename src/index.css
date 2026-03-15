@@ -124,7 +124,7 @@
 }
 
 .interactive-press {
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: transform 140ms ease, box-shadow 240ms ease, background-color 200ms ease, color 200ms ease, border-color 200ms ease;
   cursor: pointer;
 }
 
