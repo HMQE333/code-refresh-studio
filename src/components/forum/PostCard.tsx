@@ -76,6 +76,11 @@ export default function PostCard({
             <span className="flex items-center gap-1">
               <MessageSquare className="w-3.5 h-3.5" /> {comments}
             </span>
+            {viewCount !== undefined && viewCount > 0 && (
+              <span className="flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5" /> {viewCount}
+              </span>
+            )}
           </div>
         </div>
       </div>
