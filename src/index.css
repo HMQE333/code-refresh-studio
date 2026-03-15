@@ -330,3 +330,8 @@
 ::-webkit-scrollbar-track {
   background-color: hsl(0 0% 10%);
 }
+
+@keyframes loaderProgress {
+  from { width: 0; }
+  to { width: 100%; }
+}
