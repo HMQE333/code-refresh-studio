@@ -17,6 +17,9 @@ import Dyskusje from "./pages/Dyskusje.tsx";
 import Forum from "./pages/Forum.tsx";
 import Galeria from "./pages/Galeria.tsx";
 import OdzyskajHaslo from "./pages/OdzyskajHaslo.tsx";
+import ZglosProblem from "./pages/ZglosProblem.tsx";
+import Odwolanie from "./pages/Odwolanie.tsx";
+import ErrorAuth from "./pages/ErrorAuth.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -43,6 +46,9 @@ const App = () => (
               <Route path="/forum" element={<Forum />} />
               <Route path="/galeria" element={<Galeria />} />
               <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
+              <Route path="/zglos-problem" element={<ZglosProblem />} />
+              <Route path="/odwolanie" element={<Odwolanie />} />
+              <Route path="/errorauth" element={<ErrorAuth />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

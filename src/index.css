@@ -124,7 +124,7 @@
 }
 
 .interactive-press {
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: transform 140ms ease, box-shadow 240ms ease, background-color 200ms ease, color 200ms ease, border-color 200ms ease;
   cursor: pointer;
 }
 
@@ -148,13 +148,35 @@
 }
 
 @keyframes partner-pop {
-  0% { transform: scale(0.8); opacity: 0; }
-  70% { transform: scale(1.05); }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: translateY(40px) scale(0.92); opacity: 0; }
+  60% { transform: translateY(-6px) scale(1.02); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 .animate-partner-pop {
-  animation: partner-pop 400ms ease both;
+  animation: partner-pop 300ms ease forwards;
+}
+
+/* Toast animation */
+@keyframes toast-pop {
+  0% { transform: translate(-50%, 12px); opacity: 0; }
+  100% { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.animate-toast {
+  animation: toast-pop 240ms ease;
+}
+
+/* Welcome progress bar */
+@keyframes welcome-progress {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .page-transition { animation: none; }
 }
 
 .page-transition {
