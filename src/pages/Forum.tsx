@@ -17,6 +17,7 @@ type ThreadRow = {
   created_at: string;
   board_id: string;
   author_id: string;
+  is_pinned: boolean;
   profiles: { username: string | null; avatar_url: string | null } | null;
   likes: number;
   comments: number;
