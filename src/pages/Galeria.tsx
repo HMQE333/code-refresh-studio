@@ -297,6 +297,21 @@ export default function GaleriaPage() {
               {CATEGORIES.filter((c) => c !== "Wszystkie").map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <input type="file" accept="image/*" onChange={(e) => setCreateFile(e.target.files?.[0] || null)} className="text-sm" />
+            {createFile && (
+              <div className="relative rounded-xl overflow-hidden border border-border bg-muted">
+                <img
+                  src={URL.createObjectURL(createFile)}
+                  alt="Podgląd"
+                  className="w-full max-h-48 object-contain"
+                />
+                <button
+                  onClick={() => setCreateFile(null)}
+                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-background/80 text-foreground flex items-center justify-center hover:bg-background transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
             <Button onClick={handleCreate} disabled={creating || !createTitle.trim() || !createFile} className="w-full">
               {creating ? "Przesyłanie..." : "Opublikuj"}
             </Button>

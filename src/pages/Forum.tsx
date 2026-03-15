@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Flame, Clock3, MessageSquare } from "lucide-react";
+import { Search, Plus, Flame, Clock3, MessageSquare, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,14 @@ export default function ForumPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // Load user count
+  useEffect(() => {
+    supabase.from("profiles").select("id", { count: "exact", head: true }).then(({ count }) => {
+      setTotalUsers(count ?? 0);
+    });
+  }, []);
 
   // Load boards
   useEffect(() => {
@@ -167,7 +175,14 @@ export default function ForumPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Forum</h1>
-            <p className="text-muted-foreground mt-1">Przeglądaj wątki i dołącz do dyskusji</p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-muted-foreground">Przeglądaj wątki i dołącz do dyskusji</p>
+              {totalUsers > 0 && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground bg-card border border-border px-2 py-0.5 rounded-full">
+                  <Users className="w-3 h-3" /> {totalUsers} użytkowników
+                </span>
+              )}
+            </div>
           </div>
           {user && (
             <Button onClick={() => setShowCreate(true)} className="gap-2 self-start">
