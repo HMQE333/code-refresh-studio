@@ -14,7 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      fishing_methods: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          fishing_method_id: string | null
+          id: string
+          joined_at: string
+          rank_id: string | null
+          region_id: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          fishing_method_id?: string | null
+          id?: string
+          joined_at?: string
+          rank_id?: string | null
+          region_id?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          fishing_method_id?: string | null
+          id?: string
+          joined_at?: string
+          rank_id?: string | null
+          region_id?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_fishing_method_id_fkey"
+            columns: ["fishing_method_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ranks: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          min_posts: number
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          min_posts?: number
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          min_posts?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      regions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
