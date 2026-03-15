@@ -94,6 +94,13 @@ export default function Navbar() {
 
           {/* Auth buttons desktop */}
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-foreground-2 hover:text-foreground hover:bg-background-3 transition-colors"
+              title={theme === "dark" ? "Jasny motyw" : "Ciemny motyw"}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             {user ? (
               <>
                 {(isAdmin || isModerator) && (
