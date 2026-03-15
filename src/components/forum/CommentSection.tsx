@@ -63,7 +63,32 @@ export default function CommentSection({ comments, onAddComment, onLikeComment, 
           </Link>
           <span className="text-xs text-muted-foreground">{formatTimeAgo(comment.createdAt)}</span>
         </div>
-        <p className="text-sm text-foreground/90">{comment.content}</p>
+        {editingId === comment.id ? (
+          <div className="flex gap-2 items-center">
+            <input
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && editContent.trim() && onEditComment) {
+                  onEditComment(comment.id, editContent.trim());
+                  setEditingId(null);
+                }
+              }}
+            />
+            <button
+              onClick={() => { if (editContent.trim() && onEditComment) { onEditComment(comment.id, editContent.trim()); setEditingId(null); } }}
+              className="text-primary hover:text-primary/80"
+            >
+              <Check className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-foreground/90">{comment.content}</p>
+        )}
         <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
           <button
             onClick={() => onLikeComment(comment.id)}
@@ -74,6 +99,14 @@ export default function CommentSection({ comments, onAddComment, onLikeComment, 
           {!isReply && user && (
             <button onClick={() => setReplyTo(comment.id)} className="hover:text-foreground transition-colors">
               Odpowiedz
+            </button>
+          )}
+          {onEditComment && user && comment.authorId === user.id && editingId !== comment.id && (
+            <button
+              onClick={() => { setEditingId(comment.id); setEditContent(comment.content); }}
+              className="hover:text-foreground transition-colors"
+            >
+              <Pencil className="w-3 h-3" />
             </button>
           )}
           {onDeleteComment && (canModerate || (user && comment.authorId === user.id)) && (
