@@ -271,6 +271,7 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
                     <td className="p-3">
                       <Link to={`/profil/${p.username}`} className="flex items-center gap-2 hover:text-primary">
                         <Avatar className="w-7 h-7">
+                          <AvatarImage src={p.avatar_url || undefined} />
                           <AvatarFallback className="bg-secondary text-foreground text-xs">
                             {(p.username ?? "?").slice(0, 2).toUpperCase()}
                           </AvatarFallback>
