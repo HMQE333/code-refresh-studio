@@ -58,9 +58,11 @@ export default function ForumPage() {
     });
   }, []);
 
+  const PAGE_SIZE = 20;
+
   // Load threads
-  const loadThreads = useCallback(async () => {
-    setLoading(true);
+  const loadThreads = useCallback(async (append = false) => {
+    if (!append) setLoading(true);
 
     let query = supabase
       .from("threads")
