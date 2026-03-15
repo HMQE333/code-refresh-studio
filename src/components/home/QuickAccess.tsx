@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Megaphone, MessageSquare, Images, Map } from "lucide-react";
+import { Megaphone, MessageSquare, Images, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
 const quickLinks = [
