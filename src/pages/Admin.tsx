@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Users, Flag, MessageSquare, Images, FileText,
-  Shield, BarChart3, Search, Settings
+  Shield, BarChart3, Search, Ban, Clock, Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,8 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
+import { toast } from "@/components/ui/sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-type Tab = "dashboard" | "users" | "reports" | "moderation";
+type Tab = "dashboard" | "users" | "reports";
 
 type Stats = {
   users: number;
@@ -30,11 +39,14 @@ type ProfileRow = {
   display_name: string | null;
   avatar_url: string | null;
   created_at: string;
+  banned_until: string | null;
+  ban_reason: string | null;
 };
 
 type ReportRow = {
   id: string;
   title: string;
+  description: string | null;
   type: string;
   status: string;
   author_name: string | null;
@@ -74,7 +86,6 @@ export default function AdminPage() {
     { id: "dashboard" as Tab, label: "Dashboard", icon: BarChart3 },
     { id: "users" as Tab, label: "Użytkownicy", icon: Users },
     { id: "reports" as Tab, label: "Zgłoszenia", icon: Flag },
-    ...(isAdmin ? [{ id: "moderation" as Tab, label: "Moderacja", icon: Shield }] : []),
   ];
 
   return (
@@ -107,8 +118,7 @@ export default function AdminPage() {
 
         {tab === "dashboard" && <DashboardTab />}
         {tab === "users" && <UsersTab isAdmin={isAdmin} />}
-        {tab === "reports" && <ReportsTab />}
-        {tab === "moderation" && isAdmin && <ModerationTab />}
+        {tab === "reports" && <ReportsTab isAdmin={isAdmin} />}
       </div>
     </div>
   );
@@ -122,7 +132,7 @@ function DashboardTab() {
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("threads").select("id", { count: "exact", head: true }),
       supabase.from("posts").select("id", { count: "exact", head: true }),
-      supabase.from("reports").select("id", { count: "exact", head: true }),
+      supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
       supabase.from("gallery_items").select("id", { count: "exact", head: true }),
       supabase.from("channel_messages").select("id", { count: "exact", head: true }),
     ]).then(([u, t, p, r, g, m]) => {
@@ -137,7 +147,7 @@ function DashboardTab() {
     { label: "Użytkownicy", value: stats.users, icon: Users },
     { label: "Wątki", value: stats.threads, icon: FileText },
     { label: "Komentarze", value: stats.posts, icon: MessageSquare },
-    { label: "Zgłoszenia", value: stats.reports, icon: Flag },
+    { label: "Otwarte zgłoszenia", value: stats.reports, icon: Flag },
     { label: "Galeria", value: stats.gallery, icon: Images },
     { label: "Wiadomości", value: stats.messages, icon: MessageSquare },
   ];
@@ -163,10 +173,13 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState<Record<string, boolean>>({});
+  const [banDialog, setBanDialog] = useState<{ userId: string; username: string } | null>(null);
+  const [banDuration, setBanDuration] = useState("7");
+  const [banReason, setBanReason] = useState("");
 
   const loadData = useCallback(async () => {
     const [pRes, rRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, username, display_name, avatar_url, created_at").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("user_id, username, display_name, avatar_url, created_at, banned_until, ban_reason").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     setProfiles(pRes.data || []);
@@ -182,7 +195,6 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
 
   const setRole = async (userId: string, newRole: string) => {
     setBusy((b) => ({ ...b, [userId]: true }));
-    // Remove existing role
     await supabase.from("user_roles").delete().eq("user_id", userId);
     if (newRole !== "user") {
       await supabase.from("user_roles").insert({ user_id: userId, role: newRole } as any);
@@ -190,6 +202,32 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
     await loadData();
     setBusy((b) => ({ ...b, [userId]: false }));
   };
+
+  const handleBan = async () => {
+    if (!banDialog) return;
+    const days = parseInt(banDuration);
+    const bannedUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    await supabase.from("profiles").update({
+      banned_until: bannedUntil,
+      ban_reason: banReason.trim() || null,
+    } as any).eq("user_id", banDialog.userId);
+    toast.success(`Użytkownik ${banDialog.username} zbanowany na ${days} dni.`);
+    setBanDialog(null);
+    setBanReason("");
+    setBanDuration("7");
+    await loadData();
+  };
+
+  const handleUnban = async (userId: string) => {
+    await supabase.from("profiles").update({
+      banned_until: null,
+      ban_reason: null,
+    } as any).eq("user_id", userId);
+    toast.success("Ban został usunięty.");
+    await loadData();
+  };
+
+  const isBanned = (p: ProfileRow) => p.banned_until && new Date(p.banned_until) > new Date();
 
   const filtered = profiles.filter((p) => {
     if (!query.trim()) return true;
@@ -212,6 +250,7 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
               <tr className="border-b border-border bg-muted/30">
                 <th className="text-left p-3 font-medium text-muted-foreground">Użytkownik</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Rola</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Dołączył</th>
                 {isAdmin && <th className="text-left p-3 font-medium text-muted-foreground">Akcje</th>}
               </tr>
@@ -219,6 +258,7 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
             <tbody>
               {filtered.map((p) => {
                 const role = getRoleForUser(p.user_id);
+                const banned = isBanned(p);
                 return (
                   <tr key={p.user_id} className="border-b border-border last:border-0 hover:bg-muted/10">
                     <td className="p-3">
@@ -236,19 +276,39 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
                         {role}
                       </Badge>
                     </td>
+                    <td className="p-3">
+                      {banned ? (
+                        <Badge variant="destructive" className="gap-1 text-xs">
+                          <Ban className="w-3 h-3" /> Zbanowany
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">Aktywny</Badge>
+                      )}
+                    </td>
                     <td className="p-3 text-muted-foreground text-xs">{formatTimeAgo(p.created_at)}</td>
                     {isAdmin && (
                       <td className="p-3">
-                        <select
-                          value={role}
-                          onChange={(e) => setRole(p.user_id, e.target.value)}
-                          disabled={busy[p.user_id]}
-                          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-                        >
-                          <option value="user">user</option>
-                          <option value="moderator">moderator</option>
-                          <option value="admin">admin</option>
-                        </select>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={role}
+                            onChange={(e) => setRole(p.user_id, e.target.value)}
+                            disabled={busy[p.user_id]}
+                            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                          >
+                            <option value="user">user</option>
+                            <option value="moderator">moderator</option>
+                            <option value="admin">admin</option>
+                          </select>
+                          {banned ? (
+                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => handleUnban(p.user_id)}>
+                              <Clock className="w-3 h-3" /> Odbanuj
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="destructive" className="text-xs h-7 gap-1" onClick={() => setBanDialog({ userId: p.user_id, username: p.username || "?" })}>
+                              <Ban className="w-3 h-3" /> Ban
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -258,13 +318,51 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
           </table>
         </div>
       </div>
+
+      {/* Ban Dialog */}
+      <Dialog open={!!banDialog} onOpenChange={() => setBanDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Zbanuj użytkownika</DialogTitle>
+            <DialogDescription>
+              Blokada konta użytkownika <strong>{banDialog?.username}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Czas trwania (dni)</label>
+              <select
+                value={banDuration}
+                onChange={(e) => setBanDuration(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="1">1 dzień</option>
+                <option value="3">3 dni</option>
+                <option value="7">7 dni</option>
+                <option value="14">14 dni</option>
+                <option value="30">30 dni</option>
+                <option value="365">1 rok</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Powód (opcjonalnie)</label>
+              <Input value={banReason} onChange={(e) => setBanReason(e.target.value)} placeholder="Np. spam, łamanie regulaminu..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBanDialog(null)}>Anuluj</Button>
+            <Button variant="destructive" onClick={handleBan}>Zbanuj</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function ReportsTab() {
+function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [filter, setFilter] = useState("ALL");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const loadReports = useCallback(async () => {
     let q = supabase.from("reports").select("*").order("created_at", { ascending: false });
@@ -277,6 +375,12 @@ function ReportsTab() {
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("reports").update({ status, resolved_at: status === "RESOLVED" ? new Date().toISOString() : null }).eq("id", id);
+    loadReports();
+  };
+
+  const deleteReport = async (id: string) => {
+    await supabase.from("reports").delete().eq("id", id);
+    toast.success("Zgłoszenie usunięte.");
     loadReports();
   };
 
@@ -314,15 +418,32 @@ function ReportsTab() {
           {reports.map((r) => (
             <div key={r.id} className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-foreground truncate">{r.title}</h3>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <button
+                      onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+                      className="text-sm font-semibold text-foreground truncate hover:text-primary transition-colors text-left"
+                    >
+                      {r.title}
+                    </button>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[r.status] || ""}`}>
                       {statusLabels[r.status] || r.status}
                     </span>
                     <Badge variant="outline" className="text-[10px]">{r.type}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{r.author_name} · {formatTimeAgo(r.created_at)}</p>
+                  {expanded === r.id && (
+                    <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border">
+                      <p className="text-sm text-foreground/85 whitespace-pre-wrap">
+                        {r.description || "Brak opisu."}
+                      </p>
+                      {r.target_type && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Cel: {r.target_type} {r.target_id ? `(${r.target_id})` : ""}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-1.5 shrink-0">
                   {r.status === "PENDING" && (
@@ -337,25 +458,17 @@ function ReportsTab() {
                       <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, "REJECTED")} className="text-xs h-7">Odrzuć</Button>
                     </>
                   )}
+                  {isAdmin && (
+                    <Button size="sm" variant="ghost" onClick={() => deleteReport(r.id)} className="text-xs h-7 text-destructive hover:text-destructive">
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function ModerationTab() {
-  return (
-    <div className="rounded-xl border border-border bg-card p-6 text-center">
-      <Shield className="w-10 h-10 text-primary mx-auto mb-3" />
-      <h2 className="text-lg font-semibold text-foreground mb-2">Moderacja</h2>
-      <p className="text-sm text-muted-foreground">
-        Zarządzanie rolami użytkowników dostępne w zakładce "Użytkownicy".
-        Bany i zawieszenia zostaną dodane w przyszłej aktualizacji.
-      </p>
     </div>
   );
 }
