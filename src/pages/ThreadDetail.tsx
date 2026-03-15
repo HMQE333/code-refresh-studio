@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Pin, PinOff, Trash2, Pencil, Save, X, Eye } from "lucide-react";
+import { ArrowLeft, Heart, Pin, PinOff, Trash2, Pencil, Save, X, Eye, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
