@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +21,21 @@ export default function CreatePostModal({ isOpen, onClose, onCreated, boardId }:
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tag, setTag] = useState(POST_TYPES[0]);
+  const [selectedBoard, setSelectedBoard] = useState(boardId);
+  const [boards, setBoards] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      supabase.from("boards").select("id, name").order("sort_order").then(({ data }) => {
+        setBoards(data ?? []);
+        if (!selectedBoard && data && data.length > 0) {
+          setSelectedBoard(data[0].id);
+        }
+      });
+      setSelectedBoard(boardId);
+    }
+  }, [isOpen, boardId]);
 
   if (!isOpen) return null;
 
@@ -34,12 +48,16 @@ export default function CreatePostModal({ isOpen, onClose, onCreated, boardId }:
       toast.error("Tytuł i treść są wymagane.");
       return;
     }
+    if (!selectedBoard) {
+      toast.error("Wybierz dział forum.");
+      return;
+    }
 
     setIsSubmitting(true);
     const { error } = await supabase.from("threads").insert({
       title: title.trim(),
       content: content.trim(),
-      board_id: boardId,
+      board_id: selectedBoard,
       author_id: user.id,
       tag,
     });
@@ -69,6 +87,20 @@ export default function CreatePostModal({ isOpen, onClose, onCreated, boardId }:
         </div>
 
         <div className="space-y-4">
+          {/* Board selector */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Dział</label>
+            <select
+              value={selectedBoard}
+              onChange={(e) => setSelectedBoard(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              {boards.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}

@@ -17,6 +17,7 @@ type ThreadRow = {
   created_at: string;
   board_id: string;
   author_id: string;
+  is_pinned: boolean;
   profiles: { username: string | null; avatar_url: string | null } | null;
   likes: number;
   comments: number;
@@ -53,7 +54,7 @@ export default function ForumPage() {
 
     let query = supabase
       .from("threads")
-      .select("id, title, content, tag, created_at, board_id, author_id, profiles!threads_author_id_fkey(username, avatar_url)");
+      .select("id, title, content, tag, created_at, board_id, author_id, is_pinned, profiles!threads_author_id_fkey(username, avatar_url)");
 
     if (activeBoard) {
       query = query.eq("board_id", activeBoard);
@@ -63,7 +64,7 @@ export default function ForumPage() {
       query = query.ilike("title", `%${searchQuery.trim()}%`);
     }
 
-    query = query.order("created_at", { ascending: false }).limit(50);
+    query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(50);
 
     const { data: threadsData } = await query;
 
@@ -258,6 +259,7 @@ export default function ForumPage() {
                 comments={thread.comments}
                 liked={thread.liked}
                 tag={thread.tag}
+                isPinned={thread.is_pinned}
                 onClick={() => navigate(`/forum/${thread.id}`)}
                 onLike={() => handleLike(thread.id)}
               />
