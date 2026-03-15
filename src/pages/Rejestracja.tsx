@@ -24,6 +24,7 @@ export default function RejestracjaPage() {
   const [errorMessage, setErrorMessage] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
