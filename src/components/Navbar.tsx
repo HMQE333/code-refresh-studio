@@ -162,6 +162,16 @@ export default function Navbar() {
             <div className="pt-3 border-t border-border flex flex-col gap-2">
               {user ? (
                 <>
+                  {(isAdmin || isModerator) && (
+                    <Link
+                      to="/administracja"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 text-sm font-medium text-foreground-2 hover:text-foreground px-3 py-3 rounded-xl transition-colors"
+                    >
+                      <Shield size={18} />
+                      Admin
+                    </Link>
+                  )}
                   <Link
                     to="/profil"
                     onClick={() => setMobileOpen(false)}
