@@ -9,6 +9,7 @@ export default function RejestracjaPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
 
