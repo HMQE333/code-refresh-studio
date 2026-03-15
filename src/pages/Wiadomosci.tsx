@@ -269,7 +269,7 @@ export default function WiadomosciPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
                   {messages.map((msg) => {
                     const isMine = msg.sender_id === user?.id;
                     return (
