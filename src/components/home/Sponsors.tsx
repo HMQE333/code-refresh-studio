@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 
 const sponsors = [
-  { name: "Sponsor 1" },
-  { name: "Sponsor 2" },
-  { name: "Sponsor 3" },
-  { name: "Sponsor 4" },
-  { name: "Sponsor 5" },
+  { name: "FishMaster 🎣" },
+  { name: "ProAngler 🏆" },
+  { name: "Wędkarz Polski 🌊" },
+  { name: "AquaGear 🧰" },
+  { name: "NatureLure 🐟" },
 ];
 
 export default function Sponsors() {
@@ -18,10 +18,7 @@ export default function Sponsors() {
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
         >
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3">Nasi partnerzy</h2>
-          <p className="text-foreground-2 text-sm mb-10">
-            Współpracujemy z najlepszymi markami wędkarskimi w Polsce.
-          </p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-10">Nasi partnerzy</h2>
         </motion.div>
 
         <div className="flex flex-wrap items-center justify-center gap-6">
