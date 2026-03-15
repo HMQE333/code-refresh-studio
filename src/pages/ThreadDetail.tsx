@@ -225,6 +225,11 @@ export default function ThreadDetailPage() {
                   {authorName}
                 </Link>
                 <span className="text-xs text-muted-foreground">• {formatTimeAgo(thread.created_at)}</span>
+                {thread.view_count > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Eye className="w-3 h-3" /> {thread.view_count}
+                  </span>
+                )}
                 {thread.tag && <Badge variant="secondary" className="text-xs">{thread.tag}</Badge>}
               </div>
               <h1 className="text-xl font-bold text-foreground mb-3">
