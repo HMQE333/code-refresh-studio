@@ -714,3 +714,145 @@ function BoardsTab() {
     </div>
   );
 }
+
+type ThreadAdminRow = {
+  id: string;
+  title: string;
+  author_id: string;
+  created_at: string;
+  is_pinned: boolean;
+  deleted_at: string | null;
+  board_id: string;
+  view_count: number;
+  author_name: string | null;
+  board_name: string | null;
+};
+
+function ThreadsTab() {
+  const [threads, setThreads] = useState<ThreadAdminRow[]>([]);
+  const [query, setQuery] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
+
+  const load = useCallback(async () => {
+    let q = supabase
+      .from("threads")
+      .select("id, title, author_id, created_at, is_pinned, deleted_at, board_id, view_count")
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (!showDeleted) q = q.is("deleted_at", null);
+
+    const { data: threadsData } = await q;
+    if (!threadsData) { setThreads([]); return; }
+
+    const authorIds = [...new Set(threadsData.map(t => t.author_id))];
+    const boardIds = [...new Set(threadsData.map(t => t.board_id))];
+
+    const [authorsRes, boardsRes] = await Promise.all([
+      authorIds.length ? supabase.from("profiles").select("user_id, username").in("user_id", authorIds) : Promise.resolve({ data: [] }),
+      boardIds.length ? supabase.from("boards").select("id, name").in("id", boardIds) : Promise.resolve({ data: [] }),
+    ]);
+
+    const authorMap = new Map((authorsRes.data || []).map(a => [a.user_id, a.username]));
+    const boardMap = new Map((boardsRes.data || []).map(b => [b.id, b.name]));
+
+    setThreads(threadsData.map(t => ({
+      ...t,
+      view_count: (t as any).view_count ?? 0,
+      author_name: authorMap.get(t.author_id) || null,
+      board_name: boardMap.get(t.board_id) || null,
+    })));
+  }, [showDeleted]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const togglePin = async (id: string, current: boolean) => {
+    await supabase.from("threads").update({ is_pinned: !current }).eq("id", id);
+    load();
+  };
+
+  const softDelete = async (id: string) => {
+    if (!confirm("Usunąć ten wątek?")) return;
+    await supabase.from("threads").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    toast.success("Wątek usunięty.");
+    load();
+  };
+
+  const restore = async (id: string) => {
+    await supabase.from("threads").update({ deleted_at: null }).eq("id", id);
+    toast.success("Wątek przywrócony.");
+    load();
+  };
+
+  const filtered = threads.filter(t => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return t.title.toLowerCase().includes(q) || t.author_name?.toLowerCase().includes(q);
+  });
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Szukaj wątków..." className="pl-10" />
+        </div>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+          <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} className="rounded" />
+          Pokaż usunięte
+        </label>
+      </div>
+
+      <div className="rounded-xl border border-border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-3 font-medium text-muted-foreground">Wątek</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Autor</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Dział</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Data</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((t) => (
+                <tr key={t.id} className={`border-b border-border last:border-0 hover:bg-muted/10 ${t.deleted_at ? "opacity-50" : ""}`}>
+                  <td className="p-3">
+                    <Link to={`/forum/${t.id}`} className="font-medium text-foreground hover:text-primary transition-colors truncate block max-w-[250px]">
+                      {t.is_pinned && <Pin className="w-3 h-3 inline mr-1 text-primary" />}
+                      {t.title}
+                    </Link>
+                    {t.deleted_at && <Badge variant="destructive" className="text-[10px] mt-0.5">Usunięty</Badge>}
+                  </td>
+                  <td className="p-3 text-muted-foreground text-xs">{t.author_name || "—"}</td>
+                  <td className="p-3"><Badge variant="secondary" className="text-[10px]">{t.board_name || "—"}</Badge></td>
+                  <td className="p-3 text-muted-foreground text-xs whitespace-nowrap">{formatTimeAgo(t.created_at)}</td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-1.5">
+                      <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => togglePin(t.id, t.is_pinned)} title={t.is_pinned ? "Odepnij" : "Przypnij"}>
+                        {t.is_pinned ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
+                      </Button>
+                      {t.deleted_at ? (
+                        <Button size="sm" variant="ghost" className="text-xs h-7 text-primary" onClick={() => restore(t.id)}>
+                          <Clock className="w-3 h-3" />
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="ghost" className="text-xs h-7 text-destructive hover:text-destructive" onClick={() => softDelete(t.id)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">Brak wątków</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
