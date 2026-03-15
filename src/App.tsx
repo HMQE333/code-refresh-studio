@@ -11,6 +11,7 @@ import BanNotice from "@/components/BanNotice";
 import SeoStructuredData from "@/components/SeoStructuredData";
 import PageTransition from "@/components/PageTransition";
 import ScrollToTop from "@/components/ScrollToTop";
+import MaintenanceGate from "@/components/MaintenanceGate";
 import Index from "./pages/Index.tsx";
 import Logowanie from "./pages/Logowanie.tsx";
 import Rejestracja from "./pages/Rejestracja.tsx";
@@ -84,15 +85,17 @@ const App = () => (
             title="Społeczność wędkarska"
             description="RybiaPaka.pl — największa społeczność wędkarska w Polsce. Forum, galeria, dyskusje na żywo."
           />
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <BanNotice />
-            <main className="flex-1">
-              <AnimatedRoutes />
-            </main>
-            <Footer />
-            <ScrollToTop />
-          </div>
+          <MaintenanceGate>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <BanNotice />
+              <main className="flex-1">
+                <AnimatedRoutes />
+              </main>
+              <Footer />
+              <ScrollToTop />
+            </div>
+          </MaintenanceGate>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

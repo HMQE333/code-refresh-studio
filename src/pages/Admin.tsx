@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Users, Flag, MessageSquare, Images, FileText,
-  Shield, BarChart3, Search, Ban, Clock, Trash2, Megaphone, Plus, Pencil, Pin, PinOff, ScrollText
+  Shield, BarChart3, Search, Ban, Clock, Trash2, Megaphone, Plus, Pencil, Pin, PinOff, ScrollText, Settings
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-type Tab = "dashboard" | "users" | "reports" | "announcements" | "boards" | "threads" | "gallery" | "logs";
+type Tab = "dashboard" | "users" | "reports" | "announcements" | "boards" | "threads" | "gallery" | "logs" | "settings";
 
 type Stats = {
   users: number;
@@ -92,6 +92,7 @@ export default function AdminPage() {
     { id: "threads" as Tab, label: "Wątki", icon: FileText },
     { id: "gallery" as Tab, label: "Galeria", icon: Images },
     { id: "logs" as Tab, label: "Logi", icon: ScrollText },
+    { id: "settings" as Tab, label: "Ustawienia", icon: Settings },
   ];
 
   return (
@@ -130,6 +131,7 @@ export default function AdminPage() {
         {tab === "threads" && <ThreadsTab />}
         {tab === "gallery" && <GalleryAdminTab />}
         {tab === "logs" && isAdmin && <LogsTab />}
+        {tab === "settings" && isAdmin && <SettingsTab />}
       </div>
     </div>
   );
@@ -1038,6 +1040,81 @@ function LogsTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SettingsTab() {
+  const [maintenance, setMaintenance] = useState(false);
+  const [siteName, setSiteName] = useState("RybiaPaka.pl");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("key, value")
+      .then(({ data }) => {
+        data?.forEach((row: any) => {
+          if (row.key === "maintenance") setMaintenance(row.value === "true");
+          if (row.key === "site_name") setSiteName(row.value);
+        });
+        setLoading(false);
+      });
+  }, []);
+
+  const saveSetting = async (key: string, value: string) => {
+    setSaving(true);
+    await supabase.from("site_settings").upsert({ key, value, updated_at: new Date().toISOString() });
+    setSaving(false);
+    toast.success("Ustawienie zapisane.");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-semibold text-foreground">Ustawienia strony</h2>
+
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        {/* Site name */}
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Nazwa strony</label>
+          <div className="flex gap-2">
+            <Input value={siteName} onChange={(e) => setSiteName(e.target.value)} className="max-w-xs" />
+            <Button size="sm" onClick={() => saveSetting("site_name", siteName)} disabled={saving}>Zapisz</Button>
+          </div>
+        </div>
+
+        {/* Maintenance */}
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-2 block">Tryb konserwacji</label>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                const newVal = !maintenance;
+                setMaintenance(newVal);
+                await saveSetting("maintenance", newVal.toString());
+              }}
+              className={`relative w-12 h-6 rounded-full transition-colors ${maintenance ? "bg-destructive" : "bg-muted"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${maintenance ? "translate-x-6" : ""}`} />
+            </button>
+            <span className="text-sm text-foreground">
+              {maintenance ? "Aktywny — strona niedostępna dla użytkowników" : "Wyłączony"}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Gdy włączony, tylko administratorzy mogą przeglądać stronę.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
