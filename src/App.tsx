@@ -61,6 +61,7 @@ const App = () => (
                 <Route path="/errorauth" element={<ErrorAuth />} />
                 <Route path="/profil" element={<Profil />} />
                 <Route path="/profil/:username" element={<Profil />} />
+                <Route path="/szukaj" element={<Szukaj />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
