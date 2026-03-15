@@ -153,8 +153,17 @@ export default function ForumPage() {
   }, [activeBoard, activeSort, searchQuery, user, page]);
 
   useEffect(() => {
-    loadThreads();
-  }, [loadThreads]);
+    if (page === 0) {
+      loadThreads(false);
+    } else {
+      loadThreads(true);
+    }
+  }, [loadThreads, page]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [activeBoard, activeSort, searchQuery]);
 
   const handleLike = async (threadId: string) => {
     if (!user) {

@@ -334,6 +334,7 @@ export type Database = {
           fishing_method_id: string | null
           id: string
           joined_at: string
+          last_seen_at: string | null
           rank_id: string | null
           region_id: string | null
           updated_at: string
@@ -351,6 +352,7 @@ export type Database = {
           fishing_method_id?: string | null
           id?: string
           joined_at?: string
+          last_seen_at?: string | null
           rank_id?: string | null
           region_id?: string | null
           updated_at?: string
@@ -368,6 +370,7 @@ export type Database = {
           fishing_method_id?: string | null
           id?: string
           joined_at?: string
+          last_seen_at?: string | null
           rank_id?: string | null
           region_id?: string | null
           updated_at?: string
