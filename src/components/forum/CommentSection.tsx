@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Send, Heart, Trash2, Pencil, X, Check } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Send, Heart, Trash2, Pencil, X, Check, Flag } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +28,7 @@ interface CommentSectionProps {
 
 export default function CommentSection({ comments, onAddComment, onLikeComment, onDeleteComment, onEditComment, canModerate }: CommentSectionProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -115,6 +116,15 @@ export default function CommentSection({ comments, onAddComment, onLikeComment, 
               className="hover:text-destructive transition-colors"
             >
               <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+          {user && comment.authorId !== user.id && (
+            <button
+              onClick={() => navigate(`/zglos-problem?type=comment&target=${comment.id}`)}
+              className="hover:text-foreground transition-colors"
+              title="Zgłoś komentarz"
+            >
+              <Flag className="w-3 h-3" />
             </button>
           )}
         </div>

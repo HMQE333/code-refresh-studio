@@ -39,7 +39,7 @@ const CHANNELS: Channel[] = [
   { id: "gry", name: "Gry", description: "Dla graczy lubiących wędkarskie gry.", icon: Gamepad2, gradient: "from-indigo-500/20 via-indigo-500/10 to-transparent", accent: "text-indigo-200" },
 ];
 
-function ChatButton({ channel, messageCount }: { channel: Channel; messageCount: number }) {
+function ChatButton({ channel, messageCount, lastMessage }: { channel: Channel; messageCount: number; lastMessage?: { text: string; author_name: string | null; created_at: string } }) {
   const Icon = channel.icon;
   return (
     <Link
@@ -61,6 +61,12 @@ function ChatButton({ channel, messageCount }: { channel: Channel; messageCount:
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{messageCount} {messageCount === 1 ? 'wiadomość' : 'wiadomości'}</span>
           </div>
+          {lastMessage && (
+            <p className="mt-1.5 text-xs text-muted-foreground truncate">
+              <span className="font-medium text-foreground/70">{lastMessage.author_name ?? "Anonim"}:</span>{" "}
+              {lastMessage.text.length > 60 ? lastMessage.text.slice(0, 57) + "..." : lastMessage.text}
+            </p>
+          )}
         </div>
       </div>
     </Link>
@@ -70,6 +76,7 @@ function ChatButton({ channel, messageCount }: { channel: Channel; messageCount:
 export default function DyskusjePage() {
   const { user } = useAuth();
   const [messageCounts, setMessageCounts] = useState<Record<string, number>>({});
+  const [lastMessages, setLastMessages] = useState<Record<string, { text: string; author_name: string | null; created_at: string }>>({});
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
@@ -83,6 +90,23 @@ export default function DyskusjePage() {
         counts[msg.channel_id] = (counts[msg.channel_id] || 0) + 1;
       });
       setMessageCounts(counts);
+
+      // Fetch last message per channel
+      const lastMsgs: Record<string, any> = {};
+      await Promise.all(
+        CHANNELS.map(async (ch) => {
+          const { data: msgs } = await supabase
+            .from("channel_messages")
+            .select("text, author_name, created_at")
+            .eq("channel_id", ch.id)
+            .order("created_at", { ascending: false })
+            .limit(1);
+          if (msgs && msgs.length > 0) {
+            lastMsgs[ch.id] = msgs[0];
+          }
+        })
+      );
+      setLastMessages(lastMsgs);
     };
     loadCounts();
 
@@ -122,7 +146,7 @@ export default function DyskusjePage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CHANNELS.map((ch) => (
-            <ChatButton key={ch.id} channel={ch} messageCount={messageCounts[ch.id] || 0} />
+            <ChatButton key={ch.id} channel={ch} messageCount={messageCounts[ch.id] || 0} lastMessage={lastMessages[ch.id]} />
           ))}
         </div>
       </div>
