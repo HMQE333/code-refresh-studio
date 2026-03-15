@@ -92,6 +92,7 @@ export default function AdminPage() {
     { id: "threads" as Tab, label: "Wątki", icon: FileText },
     { id: "gallery" as Tab, label: "Galeria", icon: Images },
     { id: "logs" as Tab, label: "Logi", icon: ScrollText },
+    { id: "newsletter" as Tab, label: "Newsletter", icon: Mail },
     { id: "settings" as Tab, label: "Ustawienia", icon: Settings },
   ];
 
