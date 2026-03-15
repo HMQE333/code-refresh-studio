@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Flame, Clock3, MessageSquare } from "lucide-react";
+import { Search, Plus, Flame, Clock3, MessageSquare, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
