@@ -175,7 +175,14 @@ export default function ForumPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Forum</h1>
-            <p className="text-muted-foreground mt-1">Przeglądaj wątki i dołącz do dyskusji</p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-muted-foreground">Przeglądaj wątki i dołącz do dyskusji</p>
+              {totalUsers > 0 && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground bg-card border border-border px-2 py-0.5 rounded-full">
+                  <Users className="w-3 h-3" /> {totalUsers} użytkowników
+                </span>
+              )}
+            </div>
           </div>
           {user && (
             <Button onClick={() => setShowCreate(true)} className="gap-2 self-start">
