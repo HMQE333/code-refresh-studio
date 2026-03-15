@@ -42,6 +42,7 @@ export default function RejestracjaPage() {
     6: { title: "Hasło za krótkie", message: "Hasło musi mieć co najmniej 8 znaków." },
     7: { title: "Niepoprawny e-mail", message: "Podaj poprawny adres e-mail." },
     8: { title: "Rejestracja udana!", message: "Sprawdź swoją skrzynkę e-mail, aby potwierdzić konto." },
+    9: { title: "Regulamin wymagany", message: "Musisz zaakceptować regulamin, aby kontynuować." },
   };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
