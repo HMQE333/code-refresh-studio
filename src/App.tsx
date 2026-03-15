@@ -16,6 +16,7 @@ import Regulamin from "./pages/Regulamin.tsx";
 import PolitykaPrywatnosci from "./pages/PolitykaPrywatnosci.tsx";
 import Dyskusje from "./pages/Dyskusje.tsx";
 import Forum from "./pages/Forum.tsx";
+import ThreadDetail from "./pages/ThreadDetail.tsx";
 import Galeria from "./pages/Galeria.tsx";
 import OdzyskajHaslo from "./pages/OdzyskajHaslo.tsx";
 import ResetHasla from "./pages/ResetHasla.tsx";
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
                 <Route path="/dyskusje" element={<Dyskusje />} />
                 <Route path="/forum" element={<Forum />} />
+                <Route path="/forum/:threadId" element={<ThreadDetail />} />
                 <Route path="/galeria" element={<Galeria />} />
                 <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
                 <Route path="/reset-hasla" element={<ResetHasla />} />
