@@ -22,6 +22,7 @@ interface CommentSectionProps {
   onAddComment: (content: string, parentId?: string | null) => Promise<void>;
   onLikeComment: (commentId: string) => void;
   onDeleteComment?: (commentId: string) => void;
+  onEditComment?: (commentId: string, newContent: string) => Promise<void>;
   canModerate?: boolean;
 }
 
