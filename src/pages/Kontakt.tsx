@@ -8,6 +8,7 @@ import {
   Clock,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,7 @@ const supportChannels = [
     description: "Dołącz do czatu i uzyskaj szybkie odpowiedzi od zespołu i społeczności.",
     action: "Otwórz czat",
     href: "/dyskusje",
+    isPartner: false,
   },
   {
     title: "E-mail",
@@ -30,6 +32,7 @@ const supportChannels = [
     description: "Napisz do nas, jeśli sprawa wymaga kilku zdań więcej.",
     action: "rybiapaka@gmail.com",
     href: "mailto:rybiapaka@gmail.com",
+    isPartner: false,
   },
   {
     title: "Partnerstwa",
@@ -37,8 +40,9 @@ const supportChannels = [
     accent: "text-amber-300",
     bg: "bg-amber-300/10",
     description: "Wspólne akcje, sponsoring, wydarzenia – pogadajmy!",
-    action: "Napisz do nas",
+    action: "Zadzwoń i umów się na rozmowę!",
     href: "/zglos-problem?type=partnerstwo",
+    isPartner: true,
   },
 ];
 
@@ -64,6 +68,7 @@ export default function KontaktPage() {
   const { user } = useAuth();
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [partnerOpen, setPartnerOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,7 +86,6 @@ export default function KontaktPage() {
 
     setStatus("sending");
 
-    // Save as a report with type CONTACT
     const { error } = await supabase.from("reports").insert({
       title: `[Kontakt] ${subject}`,
       type: "CONTACT",
@@ -91,9 +95,7 @@ export default function KontaktPage() {
     });
 
     if (error) {
-      // If not authenticated, fall back to mock
       if (error.code === "42501" || !user) {
-        // RLS denial — just show success for UX
         setStatus("sent");
         e.currentTarget.reset();
         setTimeout(() => setStatus("idle"), 3000);
@@ -123,6 +125,22 @@ export default function KontaktPage() {
         <div className="grid sm:grid-cols-3 gap-4 mb-12">
           {supportChannels.map((item) => {
             const Icon = item.icon;
+            if (item.isPartner) {
+              return (
+                <button
+                  key={item.title}
+                  onClick={() => setPartnerOpen(true)}
+                  className="group rounded-2xl border border-border bg-card/80 p-5 hover:border-primary/30 interactive-card text-left"
+                >
+                  <div className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center mb-3`}>
+                    <Icon size={20} className={item.accent} />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{item.description}</p>
+                  <span className="text-xs text-primary font-medium">{item.action}</span>
+                </button>
+              );
+            }
             return (
               <Link
                 key={item.title}
@@ -206,6 +224,43 @@ export default function KontaktPage() {
           </div>
         </div>
       </div>
+
+      {/* Partner modal */}
+      {partnerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl">
+            <button
+              onClick={() => setPartnerOpen(false)}
+              className="absolute top-4 right-4 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X size={18} />
+            </button>
+            <div className="w-12 h-12 rounded-xl bg-amber-300/10 flex items-center justify-center mb-4">
+              <PhoneCall size={22} className="text-amber-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Współpraca i partnerstwo</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Interesuje Cię sponsoring, wspólne wydarzenia lub promocja? Wypełnij
+              formularz zgłoszeniowy, a odezwiemy się w ciągu 24 godzin.
+            </p>
+            <div className="flex gap-3">
+              <Link
+                to="/zglos-problem?type=partnerstwo"
+                onClick={() => setPartnerOpen(false)}
+                className="flex-1 text-center bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium hover:brightness-110 transition-all"
+              >
+                Wypełnij formularz
+              </Link>
+              <a
+                href="mailto:rybiapaka@gmail.com"
+                className="flex-1 text-center border border-border text-foreground rounded-xl py-2.5 text-sm font-medium hover:bg-background-3 transition-colors"
+              >
+                Napisz e-mail
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

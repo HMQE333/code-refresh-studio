@@ -1,17 +1,30 @@
 import { useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return "***";
+  const masked = local.length <= 2 ? "*".repeat(local.length) : local[0] + "*".repeat(local.length - 2) + local[local.length - 1];
+  return `${masked}@${domain}`;
+}
+
 export default function BottomCTA() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [savedEmail, setSavedEmail] = useState<string | null>(null);
+  const [revealEmail, setRevealEmail] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const trimmed = email.trim().toLowerCase();
+
+    setSavedEmail(null);
+    setRevealEmail(false);
 
     if (!trimmed || !EMAIL_REGEX.test(trimmed)) {
       setStatus("error");
@@ -19,19 +32,25 @@ export default function BottomCTA() {
       return;
     }
 
+    setStatus("loading");
+    setMessage(null);
+
     const { error } = await supabase.from("newsletter_subscribers").insert({ email: trimmed });
     if (error) {
       if (error.code === "23505") {
         setStatus("success");
-        setMessage("Ten e-mail jest już zapisany do newslettera.");
-      } else {
-        setStatus("error");
-        setMessage("Nie udało się zapisać. Spróbuj ponownie.");
+        setSavedEmail(trimmed);
+        setMessage("Już zapisałeś się do newslettera.");
+        setEmail("");
+        return;
       }
+      setStatus("error");
+      setMessage("Nie udało się zapisać. Spróbuj ponownie.");
       return;
     }
 
     setStatus("success");
+    setSavedEmail(trimmed);
     setMessage("Dziękujemy! Już zapisałeś się do newslettera.");
     setEmail("");
   };
@@ -63,6 +82,7 @@ export default function BottomCTA() {
                 if (status !== "idle") {
                   setStatus("idle");
                   setMessage(null);
+                  setSavedEmail(null);
                 }
               }}
               placeholder="Adres e-mail"
@@ -70,20 +90,31 @@ export default function BottomCTA() {
             />
             <button
               type="submit"
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm hover:brightness-110 transition-all whitespace-nowrap"
+              disabled={status === "loading"}
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm hover:brightness-110 transition-all whitespace-nowrap disabled:opacity-50"
             >
-              Zapisz się
+              {status === "loading" ? "Zapisywanie..." : "Zapisz się"}
             </button>
           </form>
 
           {message && (
-            <p
-              className={`mt-4 text-sm ${
-                status === "error" ? "text-destructive" : "text-primary"
-              }`}
-            >
+            <p className={`mt-4 text-sm ${status === "error" ? "text-destructive" : "text-primary"}`}>
               {message}
             </p>
+          )}
+
+          {savedEmail && status === "success" && (
+            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span>Zapisano: {revealEmail ? savedEmail : maskEmail(savedEmail)}</span>
+              <button
+                type="button"
+                onClick={() => setRevealEmail(!revealEmail)}
+                className="p-1 hover:text-foreground transition-colors"
+                title={revealEmail ? "Ukryj e-mail" : "Pokaż e-mail"}
+              >
+                {revealEmail ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
           )}
         </motion.div>
       </div>
