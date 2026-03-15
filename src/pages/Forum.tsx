@@ -28,6 +28,7 @@ const sortOptions = [
   { id: "popular", label: "Popularne", icon: Flame },
   { id: "newest", label: "Najnowsze", icon: Clock3 },
   { id: "comments", label: "Komentarze", icon: MessageSquare },
+  { id: "unanswered", label: "Bez odpowiedzi", icon: Sparkles },
 ] as const;
 
 export default function ForumPage() {
