@@ -177,6 +177,7 @@ export default function ChannelChatPage() {
           )}
           {messages.map((msg) => {
             const isOwn = user && msg.author_id === user.id;
+            const canDelete = isOwn || isAdmin || isModerator;
             const authorProfile = msg.author_id ? profilesMap[msg.author_id] : null;
             return (
               <div key={msg.id} className={`flex gap-3 group ${isOwn ? "flex-row-reverse" : ""}`}>
