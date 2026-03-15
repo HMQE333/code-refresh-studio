@@ -24,7 +24,7 @@ export default function Statistics() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.4 }}
-              className="stat-card rounded-2xl border border-border bg-background-3 p-6 text-center"
+              className="stat-card interactive-press rounded-2xl border border-border bg-background-3 p-6 text-center"
             >
               <div className="text-3xl sm:text-4xl font-bold text-primary mb-1">
                 {stat.value}
