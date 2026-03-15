@@ -83,6 +83,15 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
+                {(isAdmin || isModerator) && (
+                  <Link
+                    to="/administracja"
+                    className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
+                  >
+                    <Shield size={16} />
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/profil"
                   className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
