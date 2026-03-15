@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 type NavItem = {
   label: string;
   href: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<any>;
 };
 
 const navItems: NavItem[] = [
