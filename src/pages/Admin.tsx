@@ -551,6 +551,7 @@ function AnnouncementsTab() {
 
   const categoryLabels: Record<string, string> = {
     ogloszenia: "Ogłoszenia", aktualnosci: "Aktualności", konkursy: "Konkursy",
+    wydarzenia: "Wydarzenia", kulisy: "Kulisy",
   };
 
   return (
