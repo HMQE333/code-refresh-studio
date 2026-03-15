@@ -1,29 +1,152 @@
-import { useState } from "react";
-import { Heart, X, Camera } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Camera, Heart, MessageCircle, Plus, X, Send, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatTimeAgo } from "@/lib/timeAgo";
 
-const categories = ["Wszystkie", "Łowiska", "Ryby", "Sprzęt", "Przyroda"];
+const CATEGORIES = ["Wszystkie", "Życiówki", "Krajobraz", "Spinning", "Karpiowanie", "Feeder", "Spławik", "Muchowe", "Sumowe"];
 
-const mockPhotos = [
-  { id: 1, title: "Zachód słońca nad jeziorem", author: "FotoWędkarz", likes: 42, category: "Łowiska", color: "from-amber-800 to-orange-600" },
-  { id: 2, title: "Karp 12kg — rekord sezonu!", author: "KarpLover", likes: 128, category: "Ryby", color: "from-emerald-800 to-green-600" },
-  { id: 3, title: "Nowy zestaw feederowy", author: "FeederMaster", likes: 23, category: "Sprzęt", color: "from-slate-700 to-zinc-500" },
-  { id: 4, title: "Mglisty poranek na rzece", author: "NatureShot", likes: 67, category: "Przyroda", color: "from-blue-800 to-cyan-600" },
-  { id: 5, title: "Sandacz 78cm z Wisły", author: "NightAngler", likes: 95, category: "Ryby", color: "from-teal-800 to-emerald-500" },
-  { id: 6, title: "Stanowisko na nocną sesję", author: "Splawik_Pro", likes: 34, category: "Łowiska", color: "from-indigo-800 to-purple-600" },
-  { id: 7, title: "Kolekcja przynęt gumowych", author: "SpinningKing", likes: 19, category: "Sprzęt", color: "from-rose-800 to-pink-500" },
-  { id: 8, title: "Czapla nad stawem", author: "NatureShot", likes: 51, category: "Przyroda", color: "from-green-800 to-lime-600" },
-  { id: 9, title: "Sum 120cm — potwór!", author: "CatfishHunter", likes: 204, category: "Ryby", color: "from-yellow-800 to-amber-500" },
-];
+type GalleryItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+  category: string;
+  author_id: string;
+  author_name: string | null;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+  liked: boolean;
+};
+
+type GalleryComment = {
+  id: string;
+  author_name: string | null;
+  author_id: string;
+  content: string;
+  created_at: string;
+};
 
 export default function GaleriaPage() {
-  const [activeCategory, setActiveCategory] = useState("Wszystkie");
-  const [lightbox, setLightbox] = useState<number | null>(null);
+  const { user } = useAuth();
+  const [items, setItems] = useState<GalleryItem[]>([]);
+  const [category, setCategory] = useState("Wszystkie");
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
+  const [comments, setComments] = useState<GalleryComment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [profile, setProfile] = useState<{ username: string | null } | null>(null);
 
-  const filtered = activeCategory === "Wszystkie"
-    ? mockPhotos
-    : mockPhotos.filter((p) => p.category === activeCategory);
+  // Create form
+  const [createTitle, setCreateTitle] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
+  const [createCategory, setCreateCategory] = useState("Życiówki");
+  const [createFile, setCreateFile] = useState<File | null>(null);
+  const [creating, setCreating] = useState(false);
 
-  const lightboxPhoto = mockPhotos.find((p) => p.id === lightbox);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("username").eq("user_id", user.id).maybeSingle().then(({ data }) => setProfile(data));
+  }, [user]);
+
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    let query = supabase.from("gallery_items").select("*").order("created_at", { ascending: false }).limit(50);
+    if (category !== "Wszystkie") query = query.eq("category", category);
+    const { data: galleryData } = await query;
+    if (!galleryData) { setLoading(false); return; }
+
+    // Get likes and comments counts
+    const ids = galleryData.map((i) => i.id);
+    const [likesRes, commentsRes, userLikesRes] = await Promise.all([
+      supabase.from("gallery_likes").select("gallery_item_id").in("gallery_item_id", ids),
+      supabase.from("gallery_comments").select("gallery_item_id").in("gallery_item_id", ids),
+      user ? supabase.from("gallery_likes").select("gallery_item_id").in("gallery_item_id", ids).eq("user_id", user.id) : Promise.resolve({ data: [] }),
+    ]);
+
+    const likeCounts: Record<string, number> = {};
+    const commentCounts: Record<string, number> = {};
+    const userLiked = new Set<string>();
+    (likesRes.data || []).forEach((l) => { likeCounts[l.gallery_item_id] = (likeCounts[l.gallery_item_id] || 0) + 1; });
+    (commentsRes.data || []).forEach((c) => { commentCounts[c.gallery_item_id] = (commentCounts[c.gallery_item_id] || 0) + 1; });
+    (userLikesRes.data || []).forEach((l) => userLiked.add(l.gallery_item_id));
+
+    setItems(galleryData.map((item) => ({
+      ...item,
+      likes_count: likeCounts[item.id] || 0,
+      comments_count: commentCounts[item.id] || 0,
+      liked: userLiked.has(item.id),
+    })));
+    setLoading(false);
+  }, [category, user]);
+
+  useEffect(() => { loadItems(); }, [loadItems]);
+
+  const handleCreate = async () => {
+    if (!user || !createFile || !createTitle.trim()) return;
+    setCreating(true);
+    const ext = createFile.name.split(".").pop();
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("gallery").upload(path, createFile);
+    if (uploadError) { setCreating(false); return; }
+
+    const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
+    const authorName = profile?.username ?? user.email?.split("@")[0] ?? "Anonim";
+
+    await supabase.from("gallery_items").insert({
+      title: createTitle.trim(),
+      description: createDesc.trim() || null,
+      image_url: urlData.publicUrl,
+      category: createCategory,
+      author_id: user.id,
+      author_name: authorName,
+    });
+
+    setCreateTitle(""); setCreateDesc(""); setCreateFile(null); setCreateCategory("Życiówki");
+    setShowCreate(false); setCreating(false);
+    loadItems();
+  };
+
+  const handleLike = async (item: GalleryItem) => {
+    if (!user) return;
+    if (item.liked) {
+      await supabase.from("gallery_likes").delete().eq("gallery_item_id", item.id).eq("user_id", user.id);
+    } else {
+      await supabase.from("gallery_likes").insert({ gallery_item_id: item.id, user_id: user.id });
+    }
+    setItems((prev) => prev.map((i) =>
+      i.id === item.id ? { ...i, liked: !i.liked, likes_count: i.liked ? i.likes_count - 1 : i.likes_count + 1 } : i
+    ));
+    if (lightbox?.id === item.id) setLightbox((lb) => lb ? { ...lb, liked: !lb.liked, likes_count: lb.liked ? lb.likes_count - 1 : lb.likes_count + 1 } : lb);
+  };
+
+  const openLightbox = async (item: GalleryItem) => {
+    setLightbox(item);
+    const { data } = await supabase.from("gallery_comments").select("*").eq("gallery_item_id", item.id).order("created_at", { ascending: true });
+    setComments(data || []);
+  };
+
+  const handleComment = async () => {
+    if (!user || !lightbox || !newComment.trim()) return;
+    const authorName = profile?.username ?? user.email?.split("@")[0] ?? "Anonim";
+    const { data } = await supabase.from("gallery_comments").insert({
+      gallery_item_id: lightbox.id,
+      author_id: user.id,
+      author_name: authorName,
+      content: newComment.trim(),
+    }).select().single();
+    if (data) setComments((prev) => [...prev, data]);
+    setNewComment("");
+    setItems((prev) => prev.map((i) => i.id === lightbox.id ? { ...i, comments_count: i.comments_count + 1 } : i));
+  };
 
   return (
     <div className="min-h-screen bg-background py-16 px-4">
@@ -32,16 +155,21 @@ export default function GaleriaPage() {
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Galeria</h1>
           <p className="text-muted-foreground">Najlepsze zdjęcia naszej społeczności wędkarskiej</p>
+          {user && (
+            <Button onClick={() => setShowCreate(true)} className="mt-4 gap-2">
+              <Plus className="w-4 h-4" /> Dodaj zdjęcie
+            </Button>
+          )}
         </div>
 
         {/* Categories */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {categories.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
+              onClick={() => setCategory(cat)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                activeCategory === cat
+                category === cat
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                   : "bg-card text-muted-foreground border border-border hover:text-foreground"
               }`}
@@ -52,61 +180,114 @@ export default function GaleriaPage() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((photo) => (
-            <div
-              key={photo.id}
-              onClick={() => setLightbox(photo.id)}
-              className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer interactive-press"
-            >
-              {/* Placeholder gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${photo.color} flex items-center justify-center`}>
-                <Camera className="w-12 h-12 text-white/20" />
-              </div>
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                <h3 className="text-white font-semibold text-sm">{photo.title}</h3>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-white/70 text-xs">{photo.author}</span>
-                  <span className="flex items-center gap-1 text-white/70 text-xs">
-                    <Heart className="w-3.5 h-3.5" /> {photo.likes}
-                  </span>
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : items.length === 0 ? (
+          <p className="text-center text-muted-foreground py-20">Brak zdjęć w tej kategorii. Bądź pierwszy! 📸</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => openLightbox(item)}
+                className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer border border-border bg-card"
+              >
+                <img src={item.image_url} alt={item.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                  <h3 className="text-white font-semibold text-sm">{item.title}</h3>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-white/70 text-xs">{item.author_name}</span>
+                    <div className="flex items-center gap-3 text-white/70 text-xs">
+                      <span className="flex items-center gap-1"><Heart className={`w-3.5 h-3.5 ${item.liked ? "fill-red-500 text-red-500" : ""}`} /> {item.likes_count}</span>
+                      <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {item.comments_count}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
-      {lightboxPhoto && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setLightbox(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full rounded-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={`aspect-[16/10] bg-gradient-to-br ${lightboxPhoto.color} flex items-center justify-center`}>
-              <Camera className="w-20 h-20 text-white/20" />
+      {lightbox && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <div className="relative max-w-4xl w-full max-h-[90vh] bg-card rounded-2xl overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
+            {/* Image */}
+            <div className="md:w-2/3 bg-black flex items-center justify-center min-h-[300px]">
+              <img src={lightbox.image_url} alt={lightbox.title} className="max-w-full max-h-[60vh] object-contain" />
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className="text-white font-bold text-lg">{lightboxPhoto.title}</h3>
-              <div className="flex items-center gap-3 mt-1 text-white/70 text-sm">
-                <span>{lightboxPhoto.author}</span>
-                <span className="flex items-center gap-1"><Heart className="w-4 h-4" /> {lightboxPhoto.likes}</span>
+            {/* Sidebar */}
+            <div className="md:w-1/3 flex flex-col border-l border-border">
+              <div className="p-4 border-b border-border">
+                <h3 className="font-bold text-foreground">{lightbox.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{lightbox.author_name} · {formatTimeAgo(lightbox.created_at)}</p>
+                {lightbox.description && <p className="text-sm text-foreground/80 mt-2">{lightbox.description}</p>}
+                <div className="flex items-center gap-4 mt-3">
+                  <button onClick={() => handleLike(lightbox)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <Heart className={`w-4 h-4 ${lightbox.liked ? "fill-red-500 text-red-500" : ""}`} /> {lightbox.likes_count}
+                  </button>
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <MessageCircle className="w-4 h-4" /> {comments.length}
+                  </span>
+                </div>
               </div>
+              {/* Comments */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[300px]">
+                {comments.length === 0 && <p className="text-xs text-muted-foreground">Brak komentarzy</p>}
+                {comments.map((c) => (
+                  <div key={c.id} className="flex gap-2">
+                    <Avatar className="w-6 h-6 shrink-0">
+                      <AvatarFallback className="bg-secondary text-foreground text-[10px]">{(c.author_name ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-medium text-primary">{c.author_name}</span>
+                        <span className="text-[10px] text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
+                      </div>
+                      <p className="text-xs text-foreground/85">{c.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Comment input */}
+              {user ? (
+                <div className="p-3 border-t border-border flex gap-2">
+                  <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Komentarz..." className="text-xs" onKeyDown={(e) => { if (e.key === "Enter") handleComment(); }} />
+                  <Button size="sm" onClick={handleComment} disabled={!newComment.trim()}><Send className="w-3.5 h-3.5" /></Button>
+                </div>
+              ) : (
+                <p className="p-3 border-t border-border text-xs text-muted-foreground text-center">
+                  <Link to="/logowanie" className="text-primary hover:underline">Zaloguj się</Link> aby komentować
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => setLightbox(null)}
-              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
-            >
-              <X className="w-5 h-5" />
+            <button onClick={() => setLightbox(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
+
+      {/* Create modal */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Dodaj zdjęcie</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <Input value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} placeholder="Tytuł" />
+            <Textarea value={createDesc} onChange={(e) => setCreateDesc(e.target.value)} placeholder="Opis (opcjonalnie)" rows={2} />
+            <select value={createCategory} onChange={(e) => setCreateCategory(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              {CATEGORIES.filter((c) => c !== "Wszystkie").map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input type="file" accept="image/*" onChange={(e) => setCreateFile(e.target.files?.[0] || null)} className="text-sm" />
+            <Button onClick={handleCreate} disabled={creating || !createTitle.trim() || !createFile} className="w-full">
+              {creating ? "Przesyłanie..." : "Opublikuj"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
