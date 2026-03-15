@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Pin, Trash2, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, Heart, Pin, PinOff, Trash2, Pencil, Save, X, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -42,6 +42,9 @@ export default function ThreadDetailPage() {
       return;
     }
     setThread(data);
+
+    // Increment view count (fire-and-forget)
+    supabase.rpc("increment_thread_views" as any, { thread_id: threadId }).then(() => {});
 
     // Get board name
     if (data.board_id) {
@@ -222,6 +225,11 @@ export default function ThreadDetailPage() {
                   {authorName}
                 </Link>
                 <span className="text-xs text-muted-foreground">• {formatTimeAgo(thread.created_at)}</span>
+                {thread.view_count > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Eye className="w-3 h-3" /> {thread.view_count}
+                  </span>
+                )}
                 {thread.tag && <Badge variant="secondary" className="text-xs">{thread.tag}</Badge>}
               </div>
               <h1 className="text-xl font-bold text-foreground mb-3">
@@ -278,6 +286,20 @@ export default function ThreadDetailPage() {
                       <X className="w-3.5 h-3.5" />
                     </Button>
                   </div>
+                )}
+                {(isAdmin || isModerator) && !editing && (
+                  <button
+                    onClick={async () => {
+                      const newPinned = !thread.is_pinned;
+                      await supabase.from("threads").update({ is_pinned: newPinned }).eq("id", thread.id);
+                      setThread({ ...thread, is_pinned: newPinned });
+                      toast.success(newPinned ? "Wątek przypięty." : "Wątek odpięty.");
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {thread.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                    {thread.is_pinned ? "Odepnij" : "Przypnij"}
+                  </button>
                 )}
                 {(user?.id === thread.author_id || isAdmin || isModerator) && !editing && (
                   <button
