@@ -81,6 +81,16 @@ export default function PostCard({
                 <Eye className="w-3.5 h-3.5" /> {viewCount}
               </span>
             )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(`${window.location.origin}/forum/${id}`);
+              }}
+              className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
+              title="Udostępnij"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>
