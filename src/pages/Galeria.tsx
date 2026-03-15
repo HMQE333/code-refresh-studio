@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Camera, Heart, MessageCircle, Plus, X, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,7 @@ type GalleryComment = {
 
 export default function GaleriaPage() {
   const { user } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [category, setCategory] = useState("Wszystkie");
   const [loading, setLoading] = useState(true);
@@ -232,7 +234,7 @@ export default function GaleriaPage() {
                   <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MessageCircle className="w-4 h-4" /> {comments.length}
                   </span>
-                  {user && lightbox.author_id === user.id && (
+                  {user && (lightbox.author_id === user.id || isAdmin || isModerator) && (
                     <button
                       onClick={async () => {
                         if (!confirm("Usunąć to zdjęcie?")) return;

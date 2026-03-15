@@ -1,4 +1,4 @@
-import { Heart, MessageSquare, Tag } from "lucide-react";
+import { Eye, Heart, MessageSquare, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +16,13 @@ interface PostCardProps {
   liked?: boolean;
   tag?: string | null;
   isPinned?: boolean;
+  viewCount?: number;
   onClick: () => void;
   onLike: () => void;
 }
 
 export default function PostCard({
-  author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, onClick, onLike,
+  author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, viewCount, onClick, onLike,
 }: PostCardProps) {
   return (
     <article
@@ -75,6 +76,11 @@ export default function PostCard({
             <span className="flex items-center gap-1">
               <MessageSquare className="w-3.5 h-3.5" /> {comments}
             </span>
+            {viewCount !== undefined && viewCount > 0 && (
+              <span className="flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5" /> {viewCount}
+              </span>
+            )}
           </div>
         </div>
       </div>

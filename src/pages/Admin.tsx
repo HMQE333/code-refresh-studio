@@ -10,7 +10,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import { toast } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -271,6 +271,7 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
                     <td className="p-3">
                       <Link to={`/profil/${p.username}`} className="flex items-center gap-2 hover:text-primary">
                         <Avatar className="w-7 h-7">
+                          <AvatarImage src={p.avatar_url || undefined} />
                           <AvatarFallback className="bg-secondary text-foreground text-xs">
                             {(p.username ?? "?").slice(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -348,7 +349,9 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
                 <option value="7">7 dni</option>
                 <option value="14">14 dni</option>
                 <option value="30">30 dni</option>
+                <option value="90">90 dni</option>
                 <option value="365">1 rok</option>
+                <option value="3650">Permanentny</option>
               </select>
             </div>
             <div>

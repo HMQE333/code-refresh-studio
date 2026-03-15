@@ -54,7 +54,7 @@ export default function ForumPage() {
 
     let query = supabase
       .from("threads")
-      .select("id, title, content, tag, created_at, board_id, author_id, is_pinned, profiles!threads_author_id_fkey(username, avatar_url)")
+      .select("id, title, content, tag, created_at, board_id, author_id, is_pinned, view_count, profiles!threads_author_id_fkey(username, avatar_url)")
       .is("deleted_at", null);
 
     if (activeBoard) {
@@ -261,6 +261,7 @@ export default function ForumPage() {
                 liked={thread.liked}
                 tag={thread.tag}
                 isPinned={thread.is_pinned}
+                viewCount={(thread as any).view_count ?? 0}
                 onClick={() => navigate(`/forum/${thread.id}`)}
                 onLike={() => handleLike(thread.id)}
               />
