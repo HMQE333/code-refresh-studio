@@ -58,6 +58,10 @@ export default function RejestracjaPage() {
       setErrorMessage(5);
       return;
     }
+    if (!acceptedTerms) {
+      setErrorMessage(9);
+      return;
+    }
     if (password !== confirmPassword) {
       setErrorMessage(1);
       return;
