@@ -371,7 +371,7 @@ function LightboxView({
               <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Udostępnij">
                 <Share2 className="w-4 h-4" />
               </button>
-              {user && !isOwnItem && (
+              {user && item.author_id !== user.id && (
                 <Link
                   to={`/zglos-problem?type=gallery&target=${item.id}`}
                   onClick={(e) => e.stopPropagation()}
