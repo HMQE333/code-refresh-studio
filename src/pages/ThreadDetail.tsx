@@ -279,6 +279,20 @@ export default function ThreadDetailPage() {
                     </Button>
                   </div>
                 )}
+                {(isAdmin || isModerator) && !editing && (
+                  <button
+                    onClick={async () => {
+                      const newPinned = !thread.is_pinned;
+                      await supabase.from("threads").update({ is_pinned: newPinned }).eq("id", thread.id);
+                      setThread({ ...thread, is_pinned: newPinned });
+                      toast.success(newPinned ? "Wątek przypięty." : "Wątek odpięty.");
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {thread.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                    {thread.is_pinned ? "Odepnij" : "Przypnij"}
+                  </button>
+                )}
                 {(user?.id === thread.author_id || isAdmin || isModerator) && !editing && (
                   <button
                     onClick={async () => {

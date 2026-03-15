@@ -612,3 +612,103 @@ function AnnouncementsTab() {
     </div>
   );
 }
+
+type BoardRow = { id: string; name: string; slug: string; description: string | null; icon: string | null; sort_order: number };
+
+function BoardsTab() {
+  const [boards, setBoards] = useState<BoardRow[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editBoard, setEditBoard] = useState<BoardRow | null>(null);
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [description, setDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase.from("boards").select("*").order("sort_order");
+    setBoards(data || []);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const resetForm = () => { setName(""); setSlug(""); setDescription(""); setEditBoard(null); setShowForm(false); };
+
+  const handleSave = async () => {
+    if (!name.trim() || !slug.trim()) return;
+    setSaving(true);
+    if (editBoard) {
+      await supabase.from("boards").update({ name: name.trim(), slug: slug.trim(), description: description.trim() || null }).eq("id", editBoard.id);
+      toast.success("Dział zaktualizowany.");
+    } else {
+      const nextOrder = boards.length > 0 ? Math.max(...boards.map(b => b.sort_order)) + 1 : 0;
+      await supabase.from("boards").insert({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, sort_order: nextOrder });
+      toast.success("Dział dodany.");
+    }
+    setSaving(false);
+    resetForm();
+    load();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Usunąć dział? Wątki w tym dziale mogą stać się niedostępne.")) return;
+    await supabase.from("boards").delete().eq("id", id);
+    toast.success("Dział usunięty.");
+    load();
+  };
+
+  const startEdit = (b: BoardRow) => {
+    setEditBoard(b); setName(b.name); setSlug(b.slug); setDescription(b.description || ""); setShowForm(true);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-foreground">Zarządzanie działami forum</h2>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1.5">
+          <Plus className="w-3.5 h-3.5" /> Dodaj dział
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-xl border border-border bg-card p-5 mb-6 space-y-4">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa działu" />
+          <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="Slug (np. wiadomosci)" />
+          <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opis (opcjonalnie)" />
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={saving || !name.trim() || !slug.trim()}>
+              {saving ? "Zapisywanie..." : editBoard ? "Zaktualizuj" : "Dodaj"}
+            </Button>
+            <Button variant="outline" onClick={resetForm}>Anuluj</Button>
+          </div>
+        </div>
+      )}
+
+      {boards.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">Brak działów</p>
+      ) : (
+        <div className="space-y-3">
+          {boards.map((b) => (
+            <div key={b.id} className="rounded-xl border border-border bg-card p-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="text-sm font-semibold text-foreground">{b.name}</h3>
+                  <Badge variant="outline" className="text-[10px]">/{b.slug}</Badge>
+                  <Badge variant="secondary" className="text-[10px]">#{b.sort_order}</Badge>
+                </div>
+                {b.description && <p className="text-xs text-muted-foreground">{b.description}</p>}
+              </div>
+              <div className="flex gap-1.5 shrink-0">
+                <Button size="sm" variant="ghost" onClick={() => startEdit(b)} className="text-xs h-7">
+                  <Pencil className="w-3 h-3" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => handleDelete(b.id)} className="text-xs h-7 text-destructive hover:text-destructive">
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
