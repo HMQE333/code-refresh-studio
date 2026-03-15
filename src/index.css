@@ -61,6 +61,7 @@
   html {
     scroll-behavior: smooth;
     font-family: 'Poppins', sans-serif;
+    font-size: clamp(14px, 0.3vw + 13px, 18px);
   }
 
   body {
