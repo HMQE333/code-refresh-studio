@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Home, ArrowLeft } from "lucide-react";
+import fishImg from "@/assets/404-fish.png";
 
 export default function NotFound() {
   const location = useLocation();
@@ -12,11 +13,16 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
       <div className="text-center max-w-md">
-        <div className="text-8xl font-bold text-primary/20 mb-4">404</div>
+        <img
+          src={fishImg}
+          alt="Zagubiona rybka"
+          className="w-48 h-auto mx-auto mb-6 drop-shadow-lg"
+        />
+        <div className="text-6xl font-bold text-primary/20 mb-3">404</div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Strona nie została znaleziona</h1>
         <p className="text-sm text-muted-foreground mb-8">
           Wygląda na to, że ta strona nie istnieje lub została przeniesiona.
-          Sprawdź adres URL lub wróć na stronę główną.
+          Nawet nasza rybka nie może jej znaleźć!
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
