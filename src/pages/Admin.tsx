@@ -348,7 +348,9 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
                 <option value="7">7 dni</option>
                 <option value="14">14 dni</option>
                 <option value="30">30 dni</option>
+                <option value="90">90 dni</option>
                 <option value="365">1 rok</option>
+                <option value="3650">Permanentny</option>
               </select>
             </div>
             <div>
