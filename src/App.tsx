@@ -77,6 +77,7 @@ function AnimatedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <AppLoader />
     <TooltipProvider>
       <Toaster />
       <Sonner />
