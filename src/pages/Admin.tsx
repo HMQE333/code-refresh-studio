@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-type Tab = "dashboard" | "users" | "reports" | "announcements" | "boards" | "threads";
+type Tab = "dashboard" | "users" | "reports" | "announcements" | "boards" | "threads" | "gallery";
 
 type Stats = {
   users: number;
