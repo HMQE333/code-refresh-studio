@@ -53,7 +53,7 @@ export default function ForumPage() {
 
     let query = supabase
       .from("threads")
-      .select("id, title, content, tag, created_at, board_id, author_id, profiles!threads_author_id_fkey(username, avatar_url)");
+      .select("id, title, content, tag, created_at, board_id, author_id, is_pinned, profiles!threads_author_id_fkey(username, avatar_url)");
 
     if (activeBoard) {
       query = query.eq("board_id", activeBoard);
