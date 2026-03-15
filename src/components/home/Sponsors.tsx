@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 
 const sponsors = [
-  { name: "FishMaster 🎣" },
-  { name: "ProAngler 🏆" },
-  { name: "Wędkarz Polski 🌊" },
-  { name: "AquaGear 🧰" },
-  { name: "NatureLure 🐟" },
+  { name: "FishMaster", logo: "🎣" },
+  { name: "ProAngler", logo: "🏆" },
+  { name: "Wędkarz Polski", logo: "🌊" },
+  { name: "AquaGear", logo: "🧰" },
+  { name: "NatureLure", logo: "🐟" },
 ];
 
 export default function Sponsors() {
@@ -29,9 +29,10 @@ export default function Sponsors() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08, duration: 0.35 }}
-              className="animate-partner-pop w-28 h-16 rounded-xl border border-border bg-background-3 flex items-center justify-center text-foreground-2 text-xs font-medium interactive-press"
+              className="animate-partner-pop w-32 h-20 rounded-xl border border-border bg-background-3 flex flex-col items-center justify-center gap-1.5 text-foreground-2 interactive-press"
             >
-              {sponsor.name}
+              <span className="text-2xl">{sponsor.logo}</span>
+              <span className="text-xs font-medium">{sponsor.name}</span>
             </motion.div>
           ))}
         </div>
