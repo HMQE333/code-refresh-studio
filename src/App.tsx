@@ -64,6 +64,7 @@ function AnimatedRoutes() {
         <Route path="/profil" element={<PageTransition><Profil /></PageTransition>} />
         <Route path="/profil/:username" element={<PageTransition><Profil /></PageTransition>} />
         <Route path="/szukaj" element={<PageTransition><Szukaj /></PageTransition>} />
+        <Route path="/wiadomosci" element={<PageTransition><Wiadomosci /></PageTransition>} />
         <Route path="/administracja" element={<PageTransition><Admin /></PageTransition>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
