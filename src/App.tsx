@@ -13,6 +13,10 @@ import Kontakt from "./pages/Kontakt.tsx";
 import Informacje from "./pages/Informacje.tsx";
 import Regulamin from "./pages/Regulamin.tsx";
 import PolitykaPrywatnosci from "./pages/PolitykaPrywatnosci.tsx";
+import Dyskusje from "./pages/Dyskusje.tsx";
+import Forum from "./pages/Forum.tsx";
+import Galeria from "./pages/Galeria.tsx";
+import OdzyskajHaslo from "./pages/OdzyskajHaslo.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -35,6 +39,10 @@ const App = () => (
               <Route path="/informacje" element={<Informacje />} />
               <Route path="/regulamin" element={<Regulamin />} />
               <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
+              <Route path="/dyskusje" element={<Dyskusje />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/galeria" element={<Galeria />} />
+              <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
