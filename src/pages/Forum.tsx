@@ -40,6 +40,14 @@ export default function ForumPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // Load user count
+  useEffect(() => {
+    supabase.from("profiles").select("id", { count: "exact", head: true }).then(({ count }) => {
+      setTotalUsers(count ?? 0);
+    });
+  }, []);
 
   // Load boards
   useEffect(() => {
