@@ -113,6 +113,12 @@ export default function DyskusjePage() {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Wybierz kanał tematyczny i dołącz do rozmowy z innymi wędkarzami.
           </p>
+          {onlineCount > 0 && (
+            <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              {onlineCount} {onlineCount === 1 ? "osoba online" : "osób online"}
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CHANNELS.map((ch) => (
