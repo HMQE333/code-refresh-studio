@@ -120,6 +120,7 @@ export default function AdminPage() {
         {tab === "dashboard" && <DashboardTab />}
         {tab === "users" && <UsersTab isAdmin={isAdmin} />}
         {tab === "reports" && <ReportsTab isAdmin={isAdmin} />}
+        {tab === "announcements" && isAdmin && <AnnouncementsTab />}
       </div>
     </div>
   );
