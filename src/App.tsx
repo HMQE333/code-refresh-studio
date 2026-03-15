@@ -1,11 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BanNotice from "@/components/BanNotice";
+import SeoStructuredData from "@/components/SeoStructuredData";
+import PageTransition from "@/components/PageTransition";
 import Index from "./pages/Index.tsx";
 import Logowanie from "./pages/Logowanie.tsx";
 import Rejestracja from "./pages/Rejestracja.tsx";
@@ -31,6 +35,41 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/logowanie" element={<PageTransition><Logowanie /></PageTransition>} />
+        <Route path="/rejestracja" element={<PageTransition><Rejestracja /></PageTransition>} />
+        <Route path="/faq" element={<PageTransition><Faq /></PageTransition>} />
+        <Route path="/kontakt" element={<PageTransition><Kontakt /></PageTransition>} />
+        <Route path="/informacje" element={<PageTransition><Informacje /></PageTransition>} />
+        <Route path="/regulamin" element={<PageTransition><Regulamin /></PageTransition>} />
+        <Route path="/polityka-prywatnosci" element={<PageTransition><PolitykaPrywatnosci /></PageTransition>} />
+        <Route path="/dyskusje" element={<PageTransition><Dyskusje /></PageTransition>} />
+        <Route path="/dyskusje/:channelId" element={<PageTransition><ChannelChat /></PageTransition>} />
+        <Route path="/forum" element={<PageTransition><Forum /></PageTransition>} />
+        <Route path="/forum/:threadId" element={<PageTransition><ThreadDetail /></PageTransition>} />
+        <Route path="/galeria" element={<PageTransition><Galeria /></PageTransition>} />
+        <Route path="/odzyskaj-haslo" element={<PageTransition><OdzyskajHaslo /></PageTransition>} />
+        <Route path="/reset-hasla" element={<PageTransition><ResetHasla /></PageTransition>} />
+        <Route path="/zglos-problem" element={<PageTransition><ZglosProblem /></PageTransition>} />
+        <Route path="/odwolanie" element={<PageTransition><Odwolanie /></PageTransition>} />
+        <Route path="/errorauth" element={<PageTransition><ErrorAuth /></PageTransition>} />
+        <Route path="/profil" element={<PageTransition><Profil /></PageTransition>} />
+        <Route path="/profil/:username" element={<PageTransition><Profil /></PageTransition>} />
+        <Route path="/szukaj" element={<PageTransition><Szukaj /></PageTransition>} />
+        <Route path="/administracja" element={<PageTransition><Admin /></PageTransition>} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -38,35 +77,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <SeoStructuredData
+            title="Społeczność wędkarska"
+            description="RybiaPaka.pl — największa społeczność wędkarska w Polsce. Forum, galeria, dyskusje na żywo."
+          />
           <div className="flex flex-col min-h-screen">
             <Navbar />
+            <BanNotice />
             <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/logowanie" element={<Logowanie />} />
-                <Route path="/rejestracja" element={<Rejestracja />} />
-                <Route path="/faq" element={<Faq />} />
-                <Route path="/kontakt" element={<Kontakt />} />
-                <Route path="/informacje" element={<Informacje />} />
-                <Route path="/regulamin" element={<Regulamin />} />
-                <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
-                <Route path="/dyskusje" element={<Dyskusje />} />
-                <Route path="/dyskusje/:channelId" element={<ChannelChat />} />
-                <Route path="/forum" element={<Forum />} />
-                <Route path="/forum/:threadId" element={<ThreadDetail />} />
-                <Route path="/galeria" element={<Galeria />} />
-                <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
-                <Route path="/reset-hasla" element={<ResetHasla />} />
-                <Route path="/zglos-problem" element={<ZglosProblem />} />
-                <Route path="/odwolanie" element={<Odwolanie />} />
-                <Route path="/errorauth" element={<ErrorAuth />} />
-                <Route path="/profil" element={<Profil />} />
-                <Route path="/profil/:username" element={<Profil />} />
-                <Route path="/szukaj" element={<Szukaj />} />
-                <Route path="/administracja" element={<Admin />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AnimatedRoutes />
             </main>
             <Footer />
           </div>
