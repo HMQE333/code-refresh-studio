@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import { toast } from "@/components/ui/sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/sonner";
 import {
   Dialog,
   DialogContent,
