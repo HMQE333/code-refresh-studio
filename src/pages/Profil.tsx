@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images } from "lucide-react";
+import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -238,6 +238,16 @@ export default function ProfilPage() {
               {isOwnProfile && !editing && (
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
                   <Pencil className="w-3.5 h-3.5" /> Edytuj
+                </Button>
+              )}
+              {!isOwnProfile && user && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/zglos-problem?type=user&target=${profile.username}`)}
+                  className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+                >
+                  <Flag className="w-3.5 h-3.5" /> Zgłoś
                 </Button>
               )}
               {isOwnProfile && editing && (

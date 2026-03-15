@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield, Sun, Moon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
   { label: "Dyskusje", href: "/dyskusje", icon: Megaphone },
   { label: "Forum", href: "/forum", icon: MessageSquare },
   { label: "Galeria", href: "/galeria", icon: Images },
+  { label: "Informacje", href: "/informacje", icon: Info },
   { label: "Szukaj", href: "/szukaj", icon: Search },
 ];
 
@@ -27,6 +29,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin, isModerator } = useUserRole();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; display_name: string | null } | null>(null);
 
   const isActive = (href: string) => {
@@ -91,6 +94,13 @@ export default function Navbar() {
 
           {/* Auth buttons desktop */}
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-foreground-2 hover:text-foreground hover:bg-background-3 transition-colors"
+              title={theme === "dark" ? "Jasny motyw" : "Ciemny motyw"}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             {user ? (
               <>
                 {(isAdmin || isModerator) && (
@@ -173,6 +183,13 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-foreground-2 hover:text-foreground transition-colors"
+            >
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === "dark" ? "Jasny motyw" : "Ciemny motyw"}
+            </button>
             <div className="pt-3 border-t border-border flex flex-col gap-2">
               {user ? (
                 <>

@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Pin, Trash2 } from "lucide-react";
+import { ArrowLeft, Heart, Pin, Trash2, Pencil, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import CommentSection, { CommentData } from "@/components/forum/CommentSection";
 import { toast } from "@/components/ui/sonner";
@@ -21,6 +24,10 @@ export default function ThreadDetailPage() {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [boardName, setBoardName] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const loadThread = useCallback(async () => {
     if (!threadId) return;
@@ -216,8 +223,18 @@ export default function ThreadDetailPage() {
                 <span className="text-xs text-muted-foreground">• {formatTimeAgo(thread.created_at)}</span>
                 {thread.tag && <Badge variant="secondary" className="text-xs">{thread.tag}</Badge>}
               </div>
-              <h1 className="text-xl font-bold text-foreground mb-3">{thread.title}</h1>
-              <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">{thread.content}</p>
+              <h1 className="text-xl font-bold text-foreground mb-3">
+                {editing ? (
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
+                ) : (
+                  thread.title
+                )}
+              </h1>
+              {editing ? (
+                <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={6} className="text-sm" />
+              ) : (
+                <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">{thread.content}</p>
+              )}
 
               <div className="flex items-center gap-4 mt-5 pt-4 border-t border-border">
                 <button
@@ -227,7 +244,41 @@ export default function ThreadDetailPage() {
                   <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
                   {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
                 </button>
-                {(user?.id === thread.author_id || isAdmin || isModerator) && (
+                {user?.id === thread.author_id && !editing && (
+                  <button
+                    onClick={() => {
+                      setEditTitle(thread.title);
+                      setEditContent(thread.content);
+                      setEditing(true);
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" /> Edytuj
+                  </button>
+                )}
+                {editing && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={editSaving}
+                      onClick={async () => {
+                        setEditSaving(true);
+                        await supabase.from("threads").update({ title: editTitle, content: editContent }).eq("id", thread.id);
+                        setThread({ ...thread, title: editTitle, content: editContent });
+                        setEditing(false);
+                        setEditSaving(false);
+                        toast.success("Wątek zaktualizowany.");
+                      }}
+                      className="gap-1"
+                    >
+                      <Save className="w-3.5 h-3.5" /> {editSaving ? "..." : "Zapisz"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+                {(user?.id === thread.author_id || isAdmin || isModerator) && !editing && (
                   <button
                     onClick={async () => {
                       if (!confirm("Czy na pewno chcesz usunąć ten wątek?")) return;
