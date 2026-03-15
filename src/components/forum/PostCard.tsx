@@ -22,7 +22,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({
-  author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, onClick, onLike,
+  author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, viewCount, onClick, onLike,
 }: PostCardProps) {
   return (
     <article
