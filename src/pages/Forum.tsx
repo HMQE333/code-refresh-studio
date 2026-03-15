@@ -40,6 +40,8 @@ export default function ForumPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
 
   // Load user count
@@ -56,9 +58,11 @@ export default function ForumPage() {
     });
   }, []);
 
+  const PAGE_SIZE = 20;
+
   // Load threads
-  const loadThreads = useCallback(async () => {
-    setLoading(true);
+  const loadThreads = useCallback(async (append = false) => {
+    if (!append) setLoading(true);
 
     let query = supabase
       .from("threads")
@@ -73,17 +77,22 @@ export default function ForumPage() {
       query = query.ilike("title", `%${searchQuery.trim()}%`);
     }
 
-    query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(50);
+    const offset = append ? page * PAGE_SIZE : 0;
+    query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).range(offset, offset + PAGE_SIZE);
 
     const { data: threadsData } = await query;
 
     if (!threadsData || threadsData.length === 0) {
-      setThreads([]);
+      if (!append) setThreads([]);
+      setHasMore(false);
       setLoading(false);
       return;
     }
 
-    const threadIds = threadsData.map((t: any) => t.id);
+    setHasMore(threadsData.length > PAGE_SIZE);
+
+    const displayData = threadsData.slice(0, PAGE_SIZE);
+    const threadIds = displayData.map((t: any) => t.id);
 
     // Get like counts
     const { data: likesData } = await supabase
@@ -120,7 +129,7 @@ export default function ForumPage() {
       commentCounts[p.thread_id] = (commentCounts[p.thread_id] ?? 0) + 1;
     });
 
-    let result: ThreadRow[] = threadsData.map((t: any) => ({
+    let result: ThreadRow[] = displayData.map((t: any) => ({
       ...t,
       profiles: t.profiles,
       likes: likeCounts[t.id] ?? 0,
@@ -135,13 +144,26 @@ export default function ForumPage() {
       result.sort((a, b) => b.comments - a.comments);
     }
 
-    setThreads(result);
+    if (append) {
+      setThreads((prev) => [...prev, ...result]);
+    } else {
+      setThreads(result);
+    }
     setLoading(false);
-  }, [activeBoard, activeSort, searchQuery, user]);
+  }, [activeBoard, activeSort, searchQuery, user, page]);
 
   useEffect(() => {
-    loadThreads();
-  }, [loadThreads]);
+    if (page === 0) {
+      loadThreads(false);
+    } else {
+      loadThreads(true);
+    }
+  }, [loadThreads, page]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [activeBoard, activeSort, searchQuery]);
 
   const handleLike = async (threadId: string) => {
     if (!user) {
@@ -281,6 +303,13 @@ export default function ForumPage() {
                 onLike={() => handleLike(thread.id)}
               />
             ))}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button variant="outline" onClick={() => setPage((p) => p + 1)} className="gap-2">
+                  Załaduj więcej wątków
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

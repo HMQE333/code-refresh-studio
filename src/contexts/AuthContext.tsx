@@ -53,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       if (session?.user) {
         checkBan(session.user.id);
+        // Update last_seen_at
+        supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("user_id", session.user.id).then(() => {});
       } else {
         setIsBanned(false);
         setBanReason(null);
