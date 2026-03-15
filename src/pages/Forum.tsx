@@ -77,7 +77,8 @@ export default function ForumPage() {
       query = query.ilike("title", `%${searchQuery.trim()}%`);
     }
 
-    query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).limit(50);
+    const offset = append ? page * PAGE_SIZE : 0;
+    query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false }).range(offset, offset + PAGE_SIZE);
 
     const { data: threadsData } = await query;
 
