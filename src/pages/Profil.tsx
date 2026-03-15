@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle } from "lucide-react";
+import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -41,12 +41,14 @@ export default function ProfilPage() {
   const { username: paramUsername } = useParams<{ username: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [regions, setRegions] = useState<Region[]>([]);
   const [methods, setMethods] = useState<FishingMethod[]>([]);
   const [ranks, setRanks] = useState<Rank[]>([]);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ threads: 0, posts: 0, messages: 0 });
 
@@ -58,7 +60,6 @@ export default function ProfilPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Determine which profile to load
       let profileQuery;
       if (paramUsername) {
         profileQuery = supabase.from("profiles").select("*").eq("username", paramUsername).maybeSingle();
@@ -86,7 +87,6 @@ export default function ProfilPage() {
           fishing_method_id: profileRes.data.fishing_method_id || "",
         });
 
-        // Load stats
         const userId = profileRes.data.user_id;
         const [threadsRes, postsRes, msgsRes] = await Promise.all([
           supabase.from("threads").select("id", { count: "exact", head: true }).eq("author_id", userId),
@@ -108,12 +108,36 @@ export default function ProfilPage() {
     if (!authLoading) fetchData();
   }, [paramUsername, user, authLoading]);
 
-  // Redirect to login if visiting own profile without auth
   useEffect(() => {
     if (!authLoading && !user && !paramUsername) {
       navigate("/logowanie", { replace: true });
     }
   }, [user, authLoading, paramUsername, navigate]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !profile) return;
+
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      setUploadingAvatar(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const avatarUrl = urlData.publicUrl;
+
+    await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("user_id", user.id);
+    setProfile({ ...profile, avatar_url: avatarUrl });
+    setUploadingAvatar(false);
+  };
 
   const handleSave = async () => {
     if (!profile || !user) return;
@@ -166,12 +190,37 @@ export default function ProfilPage() {
           {/* Avatar + Info */}
           <div className="px-6 pb-6">
             <div className="flex items-end gap-4 -mt-12 mb-6">
-              <Avatar className="w-24 h-24 border-4 border-card">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-secondary text-foreground text-2xl">
-                  {displayName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group">
+                <Avatar className="w-24 h-24 border-4 border-card">
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="bg-secondary text-foreground text-2xl">
+                    {displayName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                {isOwnProfile && (
+                  <>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                    >
+                      <Camera className="w-5 h-5 text-white" />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </>
+                )}
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                  </div>
+                )}
+              </div>
               <div className="flex-1 pb-1">
                 <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
