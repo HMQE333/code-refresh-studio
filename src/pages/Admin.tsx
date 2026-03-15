@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Users, Flag, MessageSquare, Images, FileText,
-  Shield, BarChart3, Search, Ban, Clock, Trash2, Megaphone, Plus, Pencil, Pin, PinOff, ScrollText, Settings, Mail, Download
+  Shield, BarChart3, Search, Ban, Clock, Trash2, Megaphone, Plus, Pencil, Pin, PinOff, ScrollText, Settings, Mail, Download, Star
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-type Tab = "dashboard" | "users" | "reports" | "announcements" | "boards" | "threads" | "gallery" | "logs" | "newsletter" | "settings";
+type Tab = "dashboard" | "users" | "reports" | "announcements" | "boards" | "threads" | "gallery" | "logs" | "newsletter" | "reviews" | "settings";
 
 type Stats = {
   users: number;
@@ -93,6 +93,7 @@ export default function AdminPage() {
     { id: "gallery" as Tab, label: "Galeria", icon: Images },
     { id: "logs" as Tab, label: "Logi", icon: ScrollText },
     { id: "newsletter" as Tab, label: "Newsletter", icon: Mail },
+    { id: "reviews" as Tab, label: "Opinie", icon: Star },
     { id: "settings" as Tab, label: "Ustawienia", icon: Settings },
   ];
 
@@ -133,6 +134,7 @@ export default function AdminPage() {
         {tab === "gallery" && <GalleryAdminTab />}
         {tab === "logs" && isAdmin && <LogsTab />}
         {tab === "newsletter" && isAdmin && <NewsletterTab />}
+        {tab === "reviews" && isAdmin && <ReviewsTab />}
         {tab === "settings" && isAdmin && <SettingsTab />}
       </div>
     </div>
@@ -1220,6 +1222,102 @@ function NewsletterTab() {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function ReviewsTab() {
+  const [reviews, setReviews] = useState<{ id: string; author_name: string; text: string; rating: number; published: boolean; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newAuthor, setNewAuthor] = useState("");
+  const [newText, setNewText] = useState("");
+  const [newRating, setNewRating] = useState(5);
+
+  const loadReviews = useCallback(async () => {
+    const { data } = await supabase.from("reviews").select("*").order("created_at", { ascending: false });
+    setReviews(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadReviews(); }, [loadReviews]);
+
+  const handleAdd = async () => {
+    if (!newAuthor.trim() || !newText.trim()) return;
+    await supabase.from("reviews").insert({ author_name: newAuthor.trim(), text: newText.trim(), rating: newRating });
+    setNewAuthor(""); setNewText(""); setNewRating(5);
+    toast.success("Opinia dodana.");
+    loadReviews();
+  };
+
+  const togglePublished = async (id: string, published: boolean) => {
+    await supabase.from("reviews").update({ published: !published }).eq("id", id);
+    loadReviews();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Usunąć tę opinię?")) return;
+    await supabase.from("reviews").delete().eq("id", id);
+    toast.success("Opinia usunięta.");
+    loadReviews();
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-semibold text-foreground">Opinie na stronie głównej ({reviews.length})</h2>
+
+      {/* Add form */}
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <h3 className="text-sm font-medium text-foreground">Dodaj nową opinię</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input placeholder="Imię autora" value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)} />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Ocena:</span>
+            {[1,2,3,4,5].map((r) => (
+              <button key={r} onClick={() => setNewRating(r)} className="p-0.5">
+                <Star size={16} className={r <= newRating ? "fill-primary text-primary" : "text-muted-foreground"} />
+              </button>
+            ))}
+          </div>
+        </div>
+        <Textarea placeholder="Treść opinii..." value={newText} onChange={(e) => setNewText(e.target.value)} rows={2} />
+        <Button size="sm" onClick={handleAdd} disabled={!newAuthor.trim() || !newText.trim()}>
+          <Plus className="w-3.5 h-3.5 mr-1" /> Dodaj
+        </Button>
+      </div>
+
+      {/* Reviews list */}
+      <div className="space-y-3">
+        {reviews.map((review) => (
+          <div key={review.id} className="rounded-xl border border-border bg-card p-4 flex gap-4 items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-medium text-foreground">{review.author_name}</span>
+                <div className="flex gap-0.5">
+                  {Array.from({ length: review.rating }).map((_, i) => (
+                    <Star key={i} size={10} className="fill-primary text-primary" />
+                  ))}
+                </div>
+                {!review.published && (
+                  <Badge variant="secondary" className="text-[10px]">Ukryta</Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{review.text}</p>
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button size="sm" variant="ghost" onClick={() => togglePublished(review.id, review.published)}>
+                {review.published ? "Ukryj" : "Pokaż"}
+              </Button>
+              <button onClick={() => handleDelete(review.id)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

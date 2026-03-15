@@ -1,16 +1,16 @@
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
-const reviews = [
-  { id: 1, name: "Marek W.", text: "Najlepsza społeczność wędkarska w sieci! Tutaj zawsze znajdę odpowiedź na każde pytanie.", rating: 5 },
-  { id: 2, name: "Anna K.", text: "Dzięki RybiaPaka poznałam świetnych ludzi i odkryłam nowe łowiska w mojej okolicy.", rating: 5 },
-  { id: 3, name: "Piotr S.", text: "Forum pełne wiedzy, a galeria inspiruje do kolejnych wypraw. Polecam każdemu wędkarzowi!", rating: 5 },
-  { id: 4, name: "Tomek M.", text: "Konkursy są super motywacją. Wygrałem już dwa razy sprzęt od sponsorów!", rating: 5 },
-  { id: 5, name: "Kasia L.", text: "Świetna atmosfera i pomocni ludzie. Najlepsza strona wędkarska w PL!", rating: 5 },
-  { id: 6, name: "Janek R.", text: "Mapa łowisk to rewelacja – odkryłem miejsca, o których nie miałem pojęcia.", rating: 5 },
-];
+type Review = {
+  id: string;
+  author_name: string;
+  text: string;
+  rating: number;
+};
 
-function ReviewCard({ review }: { review: typeof reviews[0] }) {
+function ReviewCard({ review }: { review: Review }) {
   return (
     <div className="shrink-0 w-72 rounded-2xl border border-border bg-background-3 p-6">
       <div className="flex gap-1 mb-3">
@@ -19,12 +19,27 @@ function ReviewCard({ review }: { review: typeof reviews[0] }) {
         ))}
       </div>
       <p className="text-sm text-foreground-2 leading-relaxed mb-4">"{review.text}"</p>
-      <p className="text-sm font-medium text-foreground">{review.name}</p>
+      <p className="text-sm font-medium text-foreground">{review.author_name}</p>
     </div>
   );
 }
 
 export default function Reviews() {
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("reviews")
+      .select("id, author_name, text, rating")
+      .eq("published", true)
+      .order("created_at")
+      .then(({ data }) => {
+        if (data && data.length > 0) setReviews(data);
+      });
+  }, []);
+
+  if (reviews.length === 0) return null;
+
   return (
     <section className="py-20 px-4 bg-background-2">
       <div className="max-w-5xl mx-auto">
