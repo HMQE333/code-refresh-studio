@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Menu, X, User, LogOut } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 type NavItem = {
   label: string;
@@ -15,6 +16,7 @@ const navItems: NavItem[] = [
   { label: "Dyskusje", href: "/dyskusje", icon: Megaphone },
   { label: "Forum", href: "/forum", icon: MessageSquare },
   { label: "Galeria", href: "/galeria", icon: Images },
+  { label: "Szukaj", href: "/szukaj", icon: Search },
 ];
 
 export default function Navbar() {
