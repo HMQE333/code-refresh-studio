@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { Megaphone, MessageSquare, Images, Map } from "lucide-react";
+import { Megaphone, MessageSquare, Images, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
 const quickLinks = [
   { label: "Dyskusje", href: "/dyskusje", icon: Megaphone, description: "Dołącz do rozmów" },
   { label: "Forum", href: "/forum", icon: MessageSquare, description: "Zadaj pytanie" },
   { label: "Galeria", href: "/galeria", icon: Images, description: "Pokaż swoje okazy" },
-  { label: "Łowiska", href: "/lowiska", icon: Map, description: "Odkrywaj miejsca" },
+  { label: "Szukaj", href: "/szukaj", icon: Search, description: "Znajdź treści" },
 ];
 
 export default function QuickAccess() {

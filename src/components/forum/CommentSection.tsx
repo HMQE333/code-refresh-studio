@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Send, Heart } from "lucide-react";
+import { Send, Heart, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface CommentData {
   id: string;
   author: string;
+  authorId?: string;
   avatarUrl?: string | null;
   createdAt: string;
   content: string;
@@ -20,9 +21,11 @@ interface CommentSectionProps {
   comments: CommentData[];
   onAddComment: (content: string, parentId?: string | null) => Promise<void>;
   onLikeComment: (commentId: string) => void;
+  onDeleteComment?: (commentId: string) => void;
+  canModerate?: boolean;
 }
 
-export default function CommentSection({ comments, onAddComment, onLikeComment }: CommentSectionProps) {
+export default function CommentSection({ comments, onAddComment, onLikeComment, onDeleteComment, canModerate }: CommentSectionProps) {
   const { user } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,6 +71,14 @@ export default function CommentSection({ comments, onAddComment, onLikeComment }
           {!isReply && user && (
             <button onClick={() => setReplyTo(comment.id)} className="hover:text-foreground transition-colors">
               Odpowiedz
+            </button>
+          )}
+          {onDeleteComment && (canModerate || (user && comment.authorId === user.id)) && (
+            <button
+              onClick={() => { if (confirm("Usunąć ten komentarz?")) onDeleteComment(comment.id); }}
+              className="hover:text-destructive transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
             </button>
           )}
         </div>

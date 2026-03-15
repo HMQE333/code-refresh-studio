@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -8,7 +9,7 @@ export default function BottomCTA() {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const trimmed = email.trim().toLowerCase();
 
@@ -18,7 +19,18 @@ export default function BottomCTA() {
       return;
     }
 
-    // Mock success for now — will connect to backend later
+    const { error } = await supabase.from("newsletter_subscribers").insert({ email: trimmed });
+    if (error) {
+      if (error.code === "23505") {
+        setStatus("success");
+        setMessage("Ten e-mail jest już zapisany do newslettera.");
+      } else {
+        setStatus("error");
+        setMessage("Nie udało się zapisać. Spróbuj ponownie.");
+      }
+      return;
+    }
+
     setStatus("success");
     setMessage("Dziękujemy! Już zapisałeś się do newslettera.");
     setEmail("");

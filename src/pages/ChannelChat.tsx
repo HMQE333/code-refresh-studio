@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 
@@ -33,6 +34,7 @@ type ProfileInfo = { username: string | null; avatar_url: string | null };
 export default function ChannelChatPage() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -175,6 +177,7 @@ export default function ChannelChatPage() {
           )}
           {messages.map((msg) => {
             const isOwn = user && msg.author_id === user.id;
+            const canDelete = isOwn || isAdmin || isModerator;
             const authorProfile = msg.author_id ? profilesMap[msg.author_id] : null;
             return (
               <div key={msg.id} className={`flex gap-3 group ${isOwn ? "flex-row-reverse" : ""}`}>
@@ -192,7 +195,7 @@ export default function ChannelChatPage() {
                       </Link>
                     )}
                     <span className="text-[10px] text-muted-foreground">{formatTimeAgo(msg.created_at)}</span>
-                    {isOwn && (
+                    {canDelete && (
                       <button
                         onClick={() => handleDelete(msg.id)}
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
