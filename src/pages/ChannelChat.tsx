@@ -205,12 +205,12 @@ export default function ChannelChatPage() {
                       </button>
                     )}
                   </div>
-                  <div className={`rounded-2xl px-4 py-2.5 text-sm ${
+                  <div className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words ${
                     isOwn
                       ? "bg-primary text-primary-foreground rounded-tr-md"
                       : "bg-card border border-border text-foreground rounded-tl-md"
                   }`}>
-                    {msg.text}
+                    <LinkifyText text={msg.text} isOwn={!!isOwn} />
                   </div>
                 </div>
               </div>
