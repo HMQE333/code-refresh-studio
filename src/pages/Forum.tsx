@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Flame, Clock3, MessageSquare, Users } from "lucide-react";
+import { Search, Plus, Flame, Clock3, MessageSquare, Users, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ const sortOptions = [
   { id: "popular", label: "Popularne", icon: Flame },
   { id: "newest", label: "Najnowsze", icon: Clock3 },
   { id: "comments", label: "Komentarze", icon: MessageSquare },
+  { id: "unanswered", label: "Bez odpowiedzi", icon: Sparkles },
 ] as const;
 
 export default function ForumPage() {
@@ -142,6 +143,8 @@ export default function ForumPage() {
       result.sort((a, b) => b.likes - a.likes);
     } else if (activeSort === "comments") {
       result.sort((a, b) => b.comments - a.comments);
+    } else if (activeSort === "unanswered") {
+      result = result.filter((t) => t.comments === 0);
     }
 
     if (append) {

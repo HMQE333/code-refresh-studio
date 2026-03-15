@@ -1,4 +1,4 @@
-import { Eye, Heart, MessageSquare, Tag } from "lucide-react";
+import { Eye, Heart, MessageSquare, Share2, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({
-  author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, viewCount, onClick, onLike,
+  id, author, avatarUrl, createdAt, title, content, likes, comments, liked, tag, isPinned, viewCount, onClick, onLike,
 }: PostCardProps) {
   return (
     <article
@@ -81,6 +81,16 @@ export default function PostCard({
                 <Eye className="w-3.5 h-3.5" /> {viewCount}
               </span>
             )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(`${window.location.origin}/forum/${id}`);
+              }}
+              className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
+              title="Udostępnij"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>

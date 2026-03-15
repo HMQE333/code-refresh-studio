@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Camera, Heart, MessageCircle, Plus, X, Send, Trash2, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Camera, Heart, MessageCircle, Plus, X, Send, Trash2, Share2, ChevronLeft, ChevronRight, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
@@ -322,6 +323,7 @@ function LightboxView({
   const handleShare = async () => {
     const url = window.location.origin + `/galeria?photo=${item.id}`;
     await navigator.clipboard.writeText(url);
+    toast.success("Link skopiowany do schowka!");
   };
 
   return (
@@ -369,6 +371,16 @@ function LightboxView({
               <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Udostępnij">
                 <Share2 className="w-4 h-4" />
               </button>
+              {user && item.author_id !== user.id && (
+                <Link
+                  to={`/zglos-problem?type=gallery&target=${item.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-orange-400 transition-colors"
+                  title="Zgłoś"
+                >
+                  <Flag className="w-4 h-4" />
+                </Link>
+              )}
               {user && (item.author_id === user.id || isAdmin || isModerator) && (
                 <button onClick={onDelete} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors ml-auto">
                   <Trash2 className="w-4 h-4" />
