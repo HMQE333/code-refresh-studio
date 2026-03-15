@@ -338,6 +338,7 @@ export default function ThreadDetailPage() {
               await supabase.from("posts").update({ deleted_at: new Date().toISOString() }).eq("id", commentId);
               await loadComments();
             }}
+            onEditComment={handleEditComment}
             canModerate={isAdmin || isModerator}
           />
         </div>
