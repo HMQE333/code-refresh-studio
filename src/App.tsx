@@ -26,6 +26,7 @@ import Odwolanie from "./pages/Odwolanie.tsx";
 import ErrorAuth from "./pages/ErrorAuth.tsx";
 import Profil from "./pages/Profil.tsx";
 import Szukaj from "./pages/Szukaj.tsx";
+import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
