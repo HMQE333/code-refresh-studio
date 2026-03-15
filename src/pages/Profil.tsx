@@ -235,7 +235,23 @@ export default function ProfilPage() {
               </div>
               <div className="flex-1 pb-1">
                 <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
-                <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  @{profile.username}
+                  {profile.last_seen_at && (
+                    (() => {
+                      const diff = Date.now() - new Date(profile.last_seen_at).getTime();
+                      const isOnline = diff < 5 * 60 * 1000; // 5 min
+                      return (
+                        <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full ${
+                          isOnline ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? "bg-green-500" : "bg-muted-foreground"}`} />
+                          {isOnline ? "Online" : `Ostatnio: ${formatTimeAgo(profile.last_seen_at)}`}
+                        </span>
+                      );
+                    })()
+                  )}
+                </p>
               </div>
               {isOwnProfile && !editing && (
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
