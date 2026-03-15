@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import {
   Anchor,
@@ -67,7 +68,9 @@ function ChatButton({ channel, messageCount }: { channel: Channel; messageCount:
 }
 
 export default function DyskusjePage() {
+  const { user } = useAuth();
   const [messageCounts, setMessageCounts] = useState<Record<string, number>>({});
+  const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -82,7 +85,23 @@ export default function DyskusjePage() {
       setMessageCounts(counts);
     };
     loadCounts();
-  }, []);
+
+    // Track presence
+    const room = supabase.channel("online-users", {
+      config: { presence: { key: user?.id || "anon-" + Math.random().toString(36).slice(2) } },
+    });
+    room
+      .on("presence", { event: "sync" }, () => {
+        setOnlineCount(Object.keys(room.presenceState()).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await room.track({ online_at: new Date().toISOString() });
+        }
+      });
+
+    return () => { supabase.removeChannel(room); };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background py-16 px-4">
@@ -94,6 +113,12 @@ export default function DyskusjePage() {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Wybierz kanał tematyczny i dołącz do rozmowy z innymi wędkarzami.
           </p>
+          {onlineCount > 0 && (
+            <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              {onlineCount} {onlineCount === 1 ? "osoba online" : "osób online"}
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CHANNELS.map((ch) => (
