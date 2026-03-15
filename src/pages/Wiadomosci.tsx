@@ -202,7 +202,7 @@ export default function WiadomosciPage() {
                 />
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
               {filtered.length === 0 ? (
                 <div className="p-6 text-center text-muted-foreground text-sm">
                   <Mail className="w-8 h-8 mx-auto mb-2 opacity-50" />
