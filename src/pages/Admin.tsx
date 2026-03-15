@@ -1120,3 +1120,107 @@ function SettingsTab() {
     </div>
   );
 }
+
+function NewsletterTab() {
+  const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    supabase
+      .from("newsletter_subscribers")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setSubscribers(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Usunąć tego subskrybenta?")) return;
+    await supabase.from("newsletter_subscribers").delete().eq("id", id);
+    setSubscribers((prev) => prev.filter((s) => s.id !== id));
+    toast.success("Subskrybent usunięty.");
+  };
+
+  const handleExport = () => {
+    const csv = "email,data_zapisu\n" + subscribers.map((s) => `${s.email},${new Date(s.created_at).toLocaleDateString("pl-PL")}`).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `newsletter-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filtered = subscribers.filter((s) => s.email.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">
+          Newsletter ({subscribers.length} subskrybentów)
+        </h2>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Szukaj e-mail..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-48"
+          />
+          <Button size="sm" variant="outline" onClick={handleExport}>
+            <Download className="w-3.5 h-3.5 mr-1" />
+            Eksportuj CSV
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-secondary/50">
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">E-mail</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data zapisu</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                  {searchTerm ? "Brak wyników" : "Brak subskrybentów"}
+                </td>
+              </tr>
+            )}
+            {filtered.map((sub) => (
+              <tr key={sub.id} className="border-t border-border hover:bg-secondary/30 transition-colors">
+                <td className="px-4 py-3 text-foreground">{sub.email}</td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {new Date(sub.created_at).toLocaleDateString("pl-PL")}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    onClick={() => handleDelete(sub.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
