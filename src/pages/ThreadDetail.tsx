@@ -170,6 +170,13 @@ export default function ThreadDetailPage() {
     await loadComments();
   };
 
+  const handleEditComment = async (commentId: string, newContent: string) => {
+    if (!user) return;
+    await supabase.from("posts").update({ content: newContent }).eq("id", commentId);
+    await loadComments();
+    toast.success("Komentarz zaktualizowany.");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -331,6 +338,7 @@ export default function ThreadDetailPage() {
               await supabase.from("posts").update({ deleted_at: new Date().toISOString() }).eq("id", commentId);
               await loadComments();
             }}
+            onEditComment={handleEditComment}
             canModerate={isAdmin || isModerator}
           />
         </div>
