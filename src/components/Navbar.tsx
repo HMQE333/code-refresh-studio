@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Menu, X } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Menu, X, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 type NavItem = {
   label: string;
@@ -20,6 +21,7 @@ export default function Navbar() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, signOut } = useAuth();
 
   const isActive = (href: string) => {
     return href === "/" ? location.pathname === "/" : location.pathname.startsWith(href);
@@ -76,18 +78,39 @@ export default function Navbar() {
 
           {/* Auth buttons desktop */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              to="/logowanie"
-              className="text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
-            >
-              Zaloguj się
-            </Link>
-            <Link
-              to="/rejestracja"
-              className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:brightness-110 transition-all"
-            >
-              Dołącz teraz
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/profil"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
+                >
+                  <User size={16} />
+                  Profil
+                </Link>
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-2 text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
+                >
+                  <LogOut size={16} />
+                  Wyloguj
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/logowanie"
+                  className="text-sm font-medium text-foreground-2 hover:text-foreground transition-colors"
+                >
+                  Zaloguj się
+                </Link>
+                <Link
+                  to="/rejestracja"
+                  className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:brightness-110 transition-all"
+                >
+                  Dołącz teraz
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -125,20 +148,42 @@ export default function Navbar() {
               );
             })}
             <div className="pt-3 border-t border-border flex flex-col gap-2">
-              <Link
-                to="/logowanie"
-                onClick={() => setMobileOpen(false)}
-                className="text-sm text-center font-medium text-foreground-2 hover:text-foreground py-2 transition-colors"
-              >
-                Zaloguj się
-              </Link>
-              <Link
-                to="/rejestracja"
-                onClick={() => setMobileOpen(false)}
-                className="text-sm text-center font-medium bg-primary text-primary-foreground px-4 py-2.5 rounded-xl hover:brightness-110 transition-all"
-              >
-                Dołącz teraz
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    to="/profil"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 text-sm font-medium text-foreground-2 hover:text-foreground px-3 py-3 rounded-xl transition-colors"
+                  >
+                    <User size={18} />
+                    Profil
+                  </Link>
+                  <button
+                    onClick={() => { signOut(); setMobileOpen(false); }}
+                    className="flex items-center gap-3 text-sm font-medium text-foreground-2 hover:text-foreground px-3 py-3 rounded-xl transition-colors text-left"
+                  >
+                    <LogOut size={18} />
+                    Wyloguj się
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/logowanie"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-sm text-center font-medium text-foreground-2 hover:text-foreground py-2 transition-colors"
+                  >
+                    Zaloguj się
+                  </Link>
+                  <Link
+                    to="/rejestracja"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-sm text-center font-medium bg-primary text-primary-foreground px-4 py-2.5 rounded-xl hover:brightness-110 transition-all"
+                  >
+                    Dołącz teraz
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

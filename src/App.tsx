@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index.tsx";
@@ -17,9 +18,11 @@ import Dyskusje from "./pages/Dyskusje.tsx";
 import Forum from "./pages/Forum.tsx";
 import Galeria from "./pages/Galeria.tsx";
 import OdzyskajHaslo from "./pages/OdzyskajHaslo.tsx";
+import ResetHasla from "./pages/ResetHasla.tsx";
 import ZglosProblem from "./pages/ZglosProblem.tsx";
 import Odwolanie from "./pages/Odwolanie.tsx";
 import ErrorAuth from "./pages/ErrorAuth.tsx";
+import Profil from "./pages/Profil.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -30,31 +33,35 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/logowanie" element={<Logowanie />} />
-              <Route path="/rejestracja" element={<Rejestracja />} />
-              <Route path="/faq" element={<Faq />} />
-              <Route path="/kontakt" element={<Kontakt />} />
-              <Route path="/informacje" element={<Informacje />} />
-              <Route path="/regulamin" element={<Regulamin />} />
-              <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
-              <Route path="/dyskusje" element={<Dyskusje />} />
-              <Route path="/forum" element={<Forum />} />
-              <Route path="/galeria" element={<Galeria />} />
-              <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
-              <Route path="/zglos-problem" element={<ZglosProblem />} />
-              <Route path="/odwolanie" element={<Odwolanie />} />
-              <Route path="/errorauth" element={<ErrorAuth />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/logowanie" element={<Logowanie />} />
+                <Route path="/rejestracja" element={<Rejestracja />} />
+                <Route path="/faq" element={<Faq />} />
+                <Route path="/kontakt" element={<Kontakt />} />
+                <Route path="/informacje" element={<Informacje />} />
+                <Route path="/regulamin" element={<Regulamin />} />
+                <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
+                <Route path="/dyskusje" element={<Dyskusje />} />
+                <Route path="/forum" element={<Forum />} />
+                <Route path="/galeria" element={<Galeria />} />
+                <Route path="/odzyskaj-haslo" element={<OdzyskajHaslo />} />
+                <Route path="/reset-hasla" element={<ResetHasla />} />
+                <Route path="/zglos-problem" element={<ZglosProblem />} />
+                <Route path="/odwolanie" element={<Odwolanie />} />
+                <Route path="/errorauth" element={<ErrorAuth />} />
+                <Route path="/profil" element={<Profil />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
