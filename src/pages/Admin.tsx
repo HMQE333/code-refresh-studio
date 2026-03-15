@@ -90,6 +90,7 @@ export default function AdminPage() {
     { id: "announcements" as Tab, label: "Ogłoszenia", icon: Megaphone },
     { id: "boards" as Tab, label: "Działy forum", icon: MessageSquare },
     { id: "threads" as Tab, label: "Wątki", icon: FileText },
+    { id: "gallery" as Tab, label: "Galeria", icon: Images },
   ];
 
   return (
