@@ -28,6 +28,7 @@ interface CommentSectionProps {
 
 export default function CommentSection({ comments, onAddComment, onLikeComment, onDeleteComment, onEditComment, canModerate }: CommentSectionProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
