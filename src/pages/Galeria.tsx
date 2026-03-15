@@ -322,6 +322,7 @@ function LightboxView({
   const handleShare = async () => {
     const url = window.location.origin + `/galeria?photo=${item.id}`;
     await navigator.clipboard.writeText(url);
+    toast.success("Link skopiowany do schowka!");
   };
 
   return (
