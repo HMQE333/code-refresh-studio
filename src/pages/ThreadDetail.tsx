@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Pin, PinOff, Trash2, Pencil, Save, X, Eye } from "lucide-react";
+import { ArrowLeft, Heart, Pin, PinOff, Trash2, Pencil, Save, X, Eye, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -259,6 +259,15 @@ export default function ThreadDetailPage() {
                 >
                   <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
                   {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link skopiowany!");
+                  }}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Share2 className="w-4 h-4" /> Udostępnij
                 </button>
                 {user?.id === thread.author_id && !editing && (
                   <button
