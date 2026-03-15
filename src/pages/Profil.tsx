@@ -259,14 +259,25 @@ export default function ProfilPage() {
                 </Button>
               )}
               {!isOwnProfile && user && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/zglos-problem?type=user&target=${profile.username}`)}
-                  className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
-                >
-                  <Flag className="w-3.5 h-3.5" /> Zgłoś
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/wiadomosci?with=${profile.user_id}`)}
+                    className="gap-1.5"
+                  >
+                    <Mail className="w-3.5 h-3.5" /> Napisz
+                  </Button>
+                  <FriendButton userId={profile.user_id} currentUserId={user.id} />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/zglos-problem?type=user&target=${profile.username}`)}
+                    className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+                  >
+                    <Flag className="w-3.5 h-3.5" /> Zgłoś
+                  </Button>
+                </div>
               )}
               {isOwnProfile && editing && (
                 <div className="flex gap-2">
