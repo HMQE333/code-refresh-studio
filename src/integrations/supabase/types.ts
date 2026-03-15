@@ -629,6 +629,33 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          author_name: string
+          created_at: string
+          id: string
+          published: boolean
+          rating: number
+          text: string
+        }
+        Insert: {
+          author_name: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          rating?: number
+          text: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          rating?: number
+          text?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string
