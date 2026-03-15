@@ -134,6 +134,7 @@ export default function AdminPage() {
         {tab === "gallery" && <GalleryAdminTab />}
         {tab === "logs" && isAdmin && <LogsTab />}
         {tab === "newsletter" && isAdmin && <NewsletterTab />}
+        {tab === "reviews" && isAdmin && <ReviewsTab />}
         {tab === "settings" && isAdmin && <SettingsTab />}
       </div>
     </div>
