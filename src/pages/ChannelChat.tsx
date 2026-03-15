@@ -224,28 +224,30 @@ export default function ChannelChatPage() {
       <div className="sticky bottom-0 border-t border-border bg-card/90 backdrop-blur-lg px-4 py-3">
         <div className="max-w-3xl mx-auto">
           {user ? (
-            <div className="flex gap-2">
-              <input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Napisz w #${channelId}...`}
-                maxLength={2000}
-                className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-              <button
-                onClick={handleSend}
-                disabled={sending || !newMessage.trim()}
-                className="rounded-xl bg-primary text-primary-foreground px-4 py-2.5 hover:brightness-110 disabled:opacity-50 transition-all"
-              >
-                <Send size={16} />
-              </button>
-            </div>
-            {newMessage.length > 1800 && (
-              <p className={`text-[10px] mt-1 text-right ${newMessage.length > 1950 ? "text-destructive" : "text-muted-foreground"}`}>
-                {newMessage.length}/2000
-              </p>
-            )}
+            <>
+              <div className="flex gap-2">
+                <input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`Napisz w #${channelId}...`}
+                  maxLength={2000}
+                  className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={sending || !newMessage.trim()}
+                  className="rounded-xl bg-primary text-primary-foreground px-4 py-2.5 hover:brightness-110 disabled:opacity-50 transition-all"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+              {newMessage.length > 1800 && (
+                <p className={`text-[10px] mt-1 text-right ${newMessage.length > 1950 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {newMessage.length}/2000
+                </p>
+              )}
+            </>
           ) : (
             <p className="text-center text-sm text-muted-foreground">
               <Link to="/logowanie" className="text-primary hover:underline">Zaloguj się</Link> aby dołączyć do rozmowy.
