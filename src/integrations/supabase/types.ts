@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_messages: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          channel_id: string
+          created_at: string
+          id: string
+          text: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          channel_id: string
+          created_at?: string
+          id?: string
+          text: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          channel_id?: string
+          created_at?: string
+          id?: string
+          text?: string
+        }
+        Relationships: []
+      }
       fishing_methods: {
         Row: {
           created_at: string
