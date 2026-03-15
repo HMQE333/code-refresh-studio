@@ -244,7 +244,41 @@ export default function ThreadDetailPage() {
                   <Heart className={`w-4 h-4 ${liked ? "fill-red-400" : ""}`} />
                   {likeCount} {likeCount === 1 ? "polubienie" : "polubień"}
                 </button>
-                {(user?.id === thread.author_id || isAdmin || isModerator) && (
+                {user?.id === thread.author_id && !editing && (
+                  <button
+                    onClick={() => {
+                      setEditTitle(thread.title);
+                      setEditContent(thread.content);
+                      setEditing(true);
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" /> Edytuj
+                  </button>
+                )}
+                {editing && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={editSaving}
+                      onClick={async () => {
+                        setEditSaving(true);
+                        await supabase.from("threads").update({ title: editTitle, content: editContent }).eq("id", thread.id);
+                        setThread({ ...thread, title: editTitle, content: editContent });
+                        setEditing(false);
+                        setEditSaving(false);
+                        toast.success("Wątek zaktualizowany.");
+                      }}
+                      className="gap-1"
+                    >
+                      <Save className="w-3.5 h-3.5" /> {editSaving ? "..." : "Zapisz"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+                {(user?.id === thread.author_id || isAdmin || isModerator) && !editing && (
                   <button
                     onClick={async () => {
                       if (!confirm("Czy na pewno chcesz usunąć ten wątek?")) return;
