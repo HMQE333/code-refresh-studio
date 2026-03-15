@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Menu, X, Search, Fish } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
