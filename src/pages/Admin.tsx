@@ -399,7 +399,7 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div>
-      <div className="flex gap-2 mb-4 overflow-x-auto">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {["ALL", "PENDING", "IN_REVIEW", "RESOLVED", "REJECTED"].map((s) => (
           <button
             key={s}
