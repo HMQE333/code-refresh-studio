@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Camera, Heart, MessageCircle, Plus, X, Send, Trash2 } from "lucide-react";
+import { Camera, Heart, MessageCircle, Plus, X, Send, Trash2, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
