@@ -133,6 +133,8 @@ export default function AdminPage() {
 
 function DashboardTab() {
   const [stats, setStats] = useState<Stats>({ users: 0, threads: 0, posts: 0, reports: 0, gallery: 0, messages: 0 });
+  const [recentUsers, setRecentUsers] = useState<{ username: string | null; created_at: string }[]>([]);
+  const [newsletterCount, setNewsletterCount] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -142,11 +144,15 @@ function DashboardTab() {
       supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
       supabase.from("gallery_items").select("id", { count: "exact", head: true }),
       supabase.from("channel_messages").select("id", { count: "exact", head: true }),
-    ]).then(([u, t, p, r, g, m]) => {
+      supabase.from("profiles").select("username, created_at").order("created_at", { ascending: false }).limit(5),
+      supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
+    ]).then(([u, t, p, r, g, m, recent, nl]) => {
       setStats({
         users: u.count ?? 0, threads: t.count ?? 0, posts: p.count ?? 0,
         reports: r.count ?? 0, gallery: g.count ?? 0, messages: m.count ?? 0,
       });
+      setRecentUsers(recent.data || []);
+      setNewsletterCount(nl.count ?? 0);
     });
   }, []);
 
@@ -160,17 +166,45 @@ function DashboardTab() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {cards.map((c) => {
-        const Icon = c.icon;
-        return (
-          <div key={c.label} className="rounded-xl border border-border bg-card p-5">
-            <Icon className="w-5 h-5 text-primary mb-2" />
-            <p className="text-2xl font-bold text-foreground">{c.value}</p>
-            <p className="text-xs text-muted-foreground">{c.label}</p>
-          </div>
-        );
-      })}
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className="rounded-xl border border-border bg-card p-5">
+              <Icon className="w-5 h-5 text-primary mb-2" />
+              <p className="text-2xl font-bold text-foreground">{c.value}</p>
+              <p className="text-xs text-muted-foreground">{c.label}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Recent users */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Nowi użytkownicy</h3>
+          {recentUsers.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Brak</p>
+          ) : (
+            <div className="space-y-2">
+              {recentUsers.map((u, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <Link to={`/profil/${u.username}`} className="text-primary hover:underline text-xs">@{u.username}</Link>
+                  <span className="text-[10px] text-muted-foreground">{formatTimeAgo(u.created_at)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Newsletter */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Newsletter</h3>
+          <p className="text-2xl font-bold text-foreground">{newsletterCount}</p>
+          <p className="text-xs text-muted-foreground">subskrybentów</p>
+        </div>
+      </div>
     </div>
   );
 }
