@@ -129,7 +129,7 @@ export default function ForumPage() {
       commentCounts[p.thread_id] = (commentCounts[p.thread_id] ?? 0) + 1;
     });
 
-    let result: ThreadRow[] = threadsData.map((t: any) => ({
+    let result: ThreadRow[] = displayData.map((t: any) => ({
       ...t,
       profiles: t.profiles,
       likes: likeCounts[t.id] ?? 0,
