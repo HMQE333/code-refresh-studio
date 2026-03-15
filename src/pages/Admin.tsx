@@ -898,3 +898,76 @@ function ThreadsTab() {
     </div>
   );
 }
+
+type GalleryAdminRow = {
+  id: string;
+  title: string;
+  image_url: string;
+  author_name: string | null;
+  category: string;
+  created_at: string;
+};
+
+function GalleryAdminTab() {
+  const [items, setItems] = useState<GalleryAdminRow[]>([]);
+  const [query, setQuery] = useState("");
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from("gallery_items")
+      .select("id, title, image_url, author_name, category, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setItems(data || []);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Usunąć to zdjęcie z galerii?")) return;
+    await supabase.from("gallery_items").delete().eq("id", id);
+    toast.success("Zdjęcie usunięte.");
+    load();
+  };
+
+  const filtered = items.filter((item) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return item.title.toLowerCase().includes(q) || item.author_name?.toLowerCase().includes(q);
+  });
+
+  return (
+    <div>
+      <div className="mb-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Szukaj w galerii..." className="pl-10" />
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">Brak zdjęć</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {filtered.map((item) => (
+            <div key={item.id} className="rounded-xl border border-border bg-card overflow-hidden group">
+              <div className="aspect-square overflow-hidden">
+                <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div className="p-3">
+                <h3 className="text-xs font-medium text-foreground truncate">{item.title}</h3>
+                <p className="text-[10px] text-muted-foreground">{item.author_name ?? "Anonim"} · {formatTimeAgo(item.created_at)}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="secondary" className="text-[10px]">{item.category}</Badge>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)} className="text-xs h-6 ml-auto text-destructive hover:text-destructive">
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
