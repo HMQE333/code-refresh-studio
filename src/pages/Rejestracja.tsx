@@ -24,6 +24,7 @@ export default function RejestracjaPage() {
   const [errorMessage, setErrorMessage] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -41,6 +42,7 @@ export default function RejestracjaPage() {
     6: { title: "Hasło za krótkie", message: "Hasło musi mieć co najmniej 8 znaków." },
     7: { title: "Niepoprawny e-mail", message: "Podaj poprawny adres e-mail." },
     8: { title: "Rejestracja udana!", message: "Sprawdź swoją skrzynkę e-mail, aby potwierdzić konto." },
+    9: { title: "Regulamin wymagany", message: "Musisz zaakceptować regulamin, aby kontynuować." },
   };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,6 +56,10 @@ export default function RejestracjaPage() {
 
     if (!username || !email || !password || !confirmPassword) {
       setErrorMessage(5);
+      return;
+    }
+    if (!acceptedTerms) {
+      setErrorMessage(9);
       return;
     }
     if (password !== confirmPassword) {
@@ -210,6 +216,21 @@ export default function RejestracjaPage() {
                   minLength={8}
                   className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
+
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-1 rounded border-border"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Akceptuję{" "}
+                    <Link to="/regulamin" target="_blank" className="text-primary hover:underline">regulamin</Link>
+                    {" "}oraz{" "}
+                    <Link to="/polityka-prywatnosci" target="_blank" className="text-primary hover:underline">politykę prywatności</Link>
+                  </span>
+                </label>
 
                 <button
                   type="submit"

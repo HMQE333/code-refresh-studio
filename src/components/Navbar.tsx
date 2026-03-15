@@ -7,6 +7,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import NotificationsDropdown from "@/components/NotificationsDropdown";
 
 type NavItem = {
   label: string;
@@ -101,6 +102,7 @@ export default function Navbar() {
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <NotificationsDropdown />
             {user ? (
               <>
                 {(isAdmin || isModerator) && (
