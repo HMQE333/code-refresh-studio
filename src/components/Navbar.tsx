@@ -24,6 +24,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin, isModerator } = useUserRole();
 
   const isActive = (href: string) => {
     return href === "/" ? location.pathname === "/" : location.pathname.startsWith(href);
