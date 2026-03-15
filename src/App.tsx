@@ -49,6 +49,7 @@ const App = () => (
                 <Route path="/regulamin" element={<Regulamin />} />
                 <Route path="/polityka-prywatnosci" element={<PolitykaPrywatnosci />} />
                 <Route path="/dyskusje" element={<Dyskusje />} />
+                <Route path="/dyskusje/:channelId" element={<ChannelChat />} />
                 <Route path="/forum" element={<Forum />} />
                 <Route path="/forum/:threadId" element={<ThreadDetail />} />
                 <Route path="/galeria" element={<Galeria />} />
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/odwolanie" element={<Odwolanie />} />
                 <Route path="/errorauth" element={<ErrorAuth />} />
                 <Route path="/profil" element={<Profil />} />
+                <Route path="/profil/:username" element={<Profil />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
