@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimeAgo } from "@/lib/timeAgo";
 
 // Channel metadata (same as Dyskusje page)
@@ -28,6 +28,8 @@ type Message = {
   created_at: string;
 };
 
+type ProfileInfo = { username: string | null; avatar_url: string | null };
+
 export default function ChannelChatPage() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuth();
@@ -35,7 +37,8 @@ export default function ChannelChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [profile, setProfile] = useState<{ username: string | null } | null>(null);
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [profilesMap, setProfilesMap] = useState<Record<string, ProfileInfo>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +47,7 @@ export default function ChannelChatPage() {
   // Load profile
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("username").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("username, avatar_url").eq("user_id", user.id).maybeSingle().then(({ data }) => {
       setProfile(data);
     });
   }, [user]);
@@ -58,7 +61,19 @@ export default function ChannelChatPage() {
       .eq("channel_id", channelId)
       .order("created_at", { ascending: false })
       .limit(100);
-    if (data) setMessages(data.reverse());
+    if (data) {
+      setMessages(data.reverse());
+      // Load avatars for unique author_ids
+      const authorIds = [...new Set(data.map(m => m.author_id).filter(Boolean))] as string[];
+      if (authorIds.length > 0) {
+        const { data: profiles } = await supabase.from("profiles").select("user_id, username, avatar_url").in("user_id", authorIds);
+        if (profiles) {
+          const map: Record<string, ProfileInfo> = {};
+          profiles.forEach(p => { map[p.user_id] = { username: p.username, avatar_url: p.avatar_url }; });
+          setProfilesMap(map);
+        }
+      }
+    }
   }, [channelId]);
 
   useEffect(() => {
@@ -76,6 +91,14 @@ export default function ChannelChatPage() {
         (payload) => {
           const newMsg = payload.new as Message;
           setMessages((prev) => [...prev, newMsg]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "channel_messages", filter: `channel_id=eq.${channelId}` },
+        (payload) => {
+          const deletedId = (payload.old as any).id;
+          setMessages((prev) => prev.filter(m => m.id !== deletedId));
         }
       )
       .subscribe();
@@ -102,6 +125,11 @@ export default function ChannelChatPage() {
     });
     setNewMessage("");
     setSending(false);
+  };
+
+  const handleDelete = async (msgId: string) => {
+    await supabase.from("channel_messages").delete().eq("id", msgId);
+    setMessages((prev) => prev.filter(m => m.id !== msgId));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -147,17 +175,32 @@ export default function ChannelChatPage() {
           )}
           {messages.map((msg) => {
             const isOwn = user && msg.author_id === user.id;
+            const authorProfile = msg.author_id ? profilesMap[msg.author_id] : null;
             return (
-              <div key={msg.id} className={`flex gap-3 ${isOwn ? "flex-row-reverse" : ""}`}>
+              <div key={msg.id} className={`flex gap-3 group ${isOwn ? "flex-row-reverse" : ""}`}>
                 <Avatar className="w-8 h-8 shrink-0">
+                  <AvatarImage src={authorProfile?.avatar_url || undefined} />
                   <AvatarFallback className="bg-secondary text-foreground text-xs">
                     {(msg.author_name ?? "?").slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className={`max-w-[70%] ${isOwn ? "items-end" : ""}`}>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    {!isOwn && <span className="text-xs font-medium text-primary">{msg.author_name ?? "Anonim"}</span>}
+                  <div className={`flex items-center gap-2 mb-0.5 ${isOwn ? "flex-row-reverse" : ""}`}>
+                    {!isOwn && (
+                      <Link to={`/profil/${msg.author_name}`} className="text-xs font-medium text-primary hover:underline">
+                        {msg.author_name ?? "Anonim"}
+                      </Link>
+                    )}
                     <span className="text-[10px] text-muted-foreground">{formatTimeAgo(msg.created_at)}</span>
+                    {isOwn && (
+                      <button
+                        onClick={() => handleDelete(msg.id)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                        title="Usuń wiadomość"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                   <div className={`rounded-2xl px-4 py-2.5 text-sm ${
                     isOwn
