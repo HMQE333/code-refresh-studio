@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { label: "Dyskusje", href: "/dyskusje", icon: Megaphone },
   { label: "Forum", href: "/forum", icon: MessageSquare },
   { label: "Galeria", href: "/galeria", icon: Images },
+  { label: "Informacje", href: "/informacje", icon: Info },
   { label: "Szukaj", href: "/szukaj", icon: Search },
 ];
 
