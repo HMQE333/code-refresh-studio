@@ -68,7 +68,9 @@ function ChatButton({ channel, messageCount }: { channel: Channel; messageCount:
 }
 
 export default function DyskusjePage() {
+  const { user } = useAuth();
   const [messageCounts, setMessageCounts] = useState<Record<string, number>>({});
+  const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -83,7 +85,23 @@ export default function DyskusjePage() {
       setMessageCounts(counts);
     };
     loadCounts();
-  }, []);
+
+    // Track presence
+    const room = supabase.channel("online-users", {
+      config: { presence: { key: user?.id || "anon-" + Math.random().toString(36).slice(2) } },
+    });
+    room
+      .on("presence", { event: "sync" }, () => {
+        setOnlineCount(Object.keys(room.presenceState()).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await room.track({ online_at: new Date().toISOString() });
+        }
+      });
+
+    return () => { supabase.removeChannel(room); };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background py-16 px-4">
