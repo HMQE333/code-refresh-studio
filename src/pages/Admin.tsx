@@ -185,7 +185,7 @@ function UsersTab({ isAdmin }: { isAdmin: boolean }) {
     // Remove existing role
     await supabase.from("user_roles").delete().eq("user_id", userId);
     if (newRole !== "user") {
-      await supabase.from("user_roles").insert({ user_id: userId, role: newRole });
+      await supabase.from("user_roles").insert({ user_id: userId, role: newRole } as any);
     }
     await loadData();
     setBusy((b) => ({ ...b, [userId]: false }));
