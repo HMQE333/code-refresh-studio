@@ -25,7 +25,7 @@ interface CommentSectionProps {
   canModerate?: boolean;
 }
 
-export default function CommentSection({ comments, onAddComment, onLikeComment }: CommentSectionProps) {
+export default function CommentSection({ comments, onAddComment, onLikeComment, onDeleteComment, canModerate }: CommentSectionProps) {
   const { user } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
