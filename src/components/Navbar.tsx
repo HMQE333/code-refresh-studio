@@ -8,7 +8,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotificationsDropdown from "@/components/NotificationsDropdown";
-import SearchBar from "@/components/Navigation/SearchBar";
 
 type NavItem = {
   label: string;
