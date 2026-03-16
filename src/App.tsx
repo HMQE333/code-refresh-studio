@@ -36,6 +36,7 @@ import Profil from "./pages/Profil.tsx";
 import Szukaj from "./pages/Szukaj.tsx";
 import Admin from "./pages/Admin.tsx";
 import Wiadomosci from "./pages/Wiadomosci.tsx";
+import Tipply from "./pages/Tipply.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
