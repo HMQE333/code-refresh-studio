@@ -1,43 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import {
-  Anchor,
-  Feather,
-  Fish,
-  FishSymbol,
-  Gamepad2,
-  Laugh,
-  Sailboat,
-  Snowflake,
-  Target,
-  Tent,
-  MessageSquare,
-} from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-
-type Channel = {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ComponentType<any>;
-  gradient: string;
-  accent: string;
-};
-
-const CHANNELS: Channel[] = [
-  { id: "spinning", name: "Spinning", description: "Dla łowców drapieżników na spinning.", icon: FishSymbol, gradient: "from-emerald-500/25 via-emerald-500/10 to-transparent", accent: "text-emerald-300" },
-  { id: "karpiowanie", name: "Karpiowanie", description: "Dla karpiarzy lubiących długie zasiadki.", icon: Tent, gradient: "from-amber-500/20 via-amber-500/10 to-transparent", accent: "text-amber-200" },
-  { id: "feeder", name: "Feeder", description: "Dla wędkarzy łowiących na feeder.", icon: Anchor, gradient: "from-blue-500/20 via-blue-500/10 to-transparent", accent: "text-blue-200" },
-  { id: "metoda", name: "Method feeder", description: "Dla fanów method feeder zestawów.", icon: Target, gradient: "from-amber-400/25 via-amber-400/10 to-transparent", accent: "text-amber-100" },
-  { id: "splawik", name: "Spławik", description: "Dla zwolenników klasycznego spławika.", icon: Fish, gradient: "from-teal-400/20 via-teal-400/10 to-transparent", accent: "text-teal-200" },
-  { id: "muchowe", name: "Muchowe", description: "Dla miłośników łowienia na muchę.", icon: Feather, gradient: "from-purple-500/20 via-purple-500/10 to-transparent", accent: "text-purple-200" },
-  { id: "podlodowe", name: "Podlodowe", description: "Dla wędkarzy łowiących spod lodu.", icon: Snowflake, gradient: "from-blue-300/25 via-blue-300/10 to-transparent", accent: "text-blue-100" },
-  { id: "morskie", name: "Morskie", description: "Dla tych, co kochają morze.", icon: Sailboat, gradient: "from-cyan-400/20 via-cyan-400/10 to-transparent", accent: "text-cyan-200" },
-  { id: "memy", name: "Memy", description: "Dla osób szukających wędkarskich memów.", icon: Laugh, gradient: "from-green-400/20 via-green-400/10 to-transparent", accent: "text-green-200" },
-  { id: "gry", name: "Gry", description: "Dla graczy lubiących wędkarskie gry.", icon: Gamepad2, gradient: "from-indigo-500/20 via-indigo-500/10 to-transparent", accent: "text-indigo-200" },
-];
+import { CHANNELS } from "@/const/channels";
+import type { Channel } from "@/types/channels";
 
 function ChatButton({ channel, messageCount, lastMessage }: { channel: Channel; messageCount: number; lastMessage?: { text: string; author_name: string | null; created_at: string } }) {
   const Icon = channel.icon;
