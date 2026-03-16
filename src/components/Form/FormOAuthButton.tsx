@@ -18,7 +18,7 @@ export default function FormOAuthButton({
       className="flex items-center justify-center rounded-xl border border-border bg-background p-3 hover:bg-muted transition-colors"
       aria-label={`Zaloguj się przez ${icon}`}
     >
-      <IconImage src={iconUrl} alt={icon} className="w-5 h-5" />
+      <IconImage src={iconUrl} alt={icon} width={20} height={20} className="w-5 h-5" />
     </button>
   );
 }
