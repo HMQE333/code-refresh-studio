@@ -13,6 +13,7 @@ import SeoStructuredData from "@/components/SeoStructuredData";
 import PageTransition from "@/components/PageTransition";
 import ScrollToTop from "@/components/ScrollToTop";
 import MaintenanceGate from "@/components/MaintenanceGate";
+import ModerationGate from "@/components/ModerationGate";
 import Index from "./pages/Index.tsx";
 import Logowanie from "./pages/Logowanie.tsx";
 import Rejestracja from "./pages/Rejestracja.tsx";
