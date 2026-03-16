@@ -93,9 +93,8 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Search + Auth buttons desktop */}
+          {/* Auth buttons desktop */}
           <div className="hidden md:flex items-center gap-3">
-            <SearchBar />
             <button
               onClick={toggleTheme}
               className="p-2 rounded-xl text-foreground-2 hover:text-foreground hover:bg-background-3 transition-colors"
