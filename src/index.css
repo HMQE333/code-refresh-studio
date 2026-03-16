@@ -312,6 +312,15 @@
   to { transform: translateX(calc(-100% - var(--gap))); }
 }
 
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--gap))); }
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--duration) linear infinite;
+}
+
 .animate-marquee {
   animation: marquee var(--duration) linear infinite;
 }
@@ -371,11 +380,29 @@
 
 /* Responsive max-width overrides for large screens */
 @media (min-width: 1280px) {
+  .max-w-2xl { max-width: 48rem; }
+  .max-w-3xl { max-width: 56rem; }
+  .max-w-4xl { max-width: 64rem; }
   .max-w-5xl { max-width: 72rem; }
   .max-w-6xl { max-width: 80rem; }
 }
 
 @media (min-width: 1536px) {
+  .max-w-2xl { max-width: 52rem; }
+  .max-w-3xl { max-width: 60rem; }
+  .max-w-4xl { max-width: 72rem; }
   .max-w-5xl { max-width: 80rem; }
   .max-w-6xl { max-width: 88rem; }
+}
+
+/* App loader */
+.app-loader {
+  opacity: 1;
+  transition: opacity 220ms ease;
+  will-change: opacity;
+}
+
+.app-loader--exit {
+  opacity: 0;
+  pointer-events: none;
 }
