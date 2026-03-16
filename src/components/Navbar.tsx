@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Menu, X, User, LogOut, Shield, Sun, Moon, Info, Mail } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield, Sun, Moon, Info, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
