@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag, LogOut, Trash2, Mail, UserPlus, UserCheck, Clock, Share2, Users } from "lucide-react";
+import { User, MapPin, Fish, Calendar, Pencil, Save, X, MessageSquare, FileText, MessageCircle, Camera, Heart, Images, Flag, LogOut, Trash2, Mail, UserPlus, UserCheck, Clock, Users } from "lucide-react";
+import StatCard from "@/components/Profile/StatCard";
+import RankBadge from "@/components/Profile/RankBadge";
+import ShareProfileButton from "@/components/Profile/ShareProfileButton";
+import TagPill from "@/components/Profile/TagPill";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
@@ -426,21 +430,12 @@ export default function ProfilPage() {
 
             {/* Rank badge + Share */}
             <div className="flex items-center gap-2 mb-4">
-              {rank && (
-                <Badge variant="secondary" className="gap-1.5 px-3 py-1" style={{ color: rank.color || undefined }}>
-                  <User className="w-3 h-3" /> {rank.name}
-                </Badge>
-              )}
-              <button
-                onClick={async () => {
-                  const url = `${window.location.origin}/profil/${profile.username}`;
-                  await navigator.clipboard.writeText(url);
-                  toast.success("Link do profilu skopiowany!");
-                }}
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto"
-              >
-                <Share2 className="w-3.5 h-3.5" /> Udostępnij
-              </button>
+              {rank && <RankBadge rank={rank.name} color={rank.color} />}
+              {region && <TagPill label={voivodeshipLabels[region.name] || region.name} />}
+              {method && <TagPill label={method.name} />}
+              <div className="ml-auto">
+                <ShareProfileButton username={profile.username || ""} />
+              </div>
             </div>
 
             {/* Edit / View mode */}
@@ -505,21 +500,9 @@ export default function ProfilPage() {
             <div>
               <h2 className="text-sm font-semibold text-foreground mb-3">Aktywność</h2>
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-border bg-background p-4 text-center">
-                  <FileText className="w-5 h-5 text-primary mx-auto mb-1.5" />
-                  <p className="text-lg font-bold text-foreground">{stats.threads}</p>
-                  <p className="text-xs text-muted-foreground">Wątki</p>
-                </div>
-                <div className="rounded-xl border border-border bg-background p-4 text-center">
-                  <MessageSquare className="w-5 h-5 text-primary mx-auto mb-1.5" />
-                  <p className="text-lg font-bold text-foreground">{stats.posts}</p>
-                  <p className="text-xs text-muted-foreground">Komentarze</p>
-                </div>
-                <div className="rounded-xl border border-border bg-background p-4 text-center">
-                  <MessageCircle className="w-5 h-5 text-primary mx-auto mb-1.5" />
-                  <p className="text-lg font-bold text-foreground">{stats.messages}</p>
-                  <p className="text-xs text-muted-foreground">Wiadomości</p>
-                </div>
+                <StatCard label="Wątki" value={stats.threads} icon={<FileText className="w-4 h-4" />} />
+                <StatCard label="Komentarze" value={stats.posts} icon={<MessageSquare className="w-4 h-4" />} />
+                <StatCard label="Wiadomości" value={stats.messages} icon={<MessageCircle className="w-4 h-4" />} />
               </div>
             </div>
           </div>
