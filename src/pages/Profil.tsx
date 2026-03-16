@@ -326,7 +326,7 @@ export default function ProfilPage() {
                   >
                     <Mail className="w-3.5 h-3.5" /> Napisz
                   </Button>
-                  <FriendButton userId={profile.user_id} currentUserId={user.id} />
+                  <AddFriendButton userId={profile.user_id} currentUserId={user.id} />
                   <Button
                     variant="outline"
                     size="sm"
