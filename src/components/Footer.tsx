@@ -28,6 +28,12 @@ const footerLinks = [
       { label: "Zgłoś problem", href: "/zglos-problem" },
     ],
   },
+  {
+    title: "Wsparcie",
+    links: [
+      { label: "Wesprzyj nas (Tipply)", href: "/tipply" },
+    ],
+  },
 ];
 
 export default function Footer() {
