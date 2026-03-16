@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Megaphone, MessageSquare, Images, Menu, X, User, LogOut, Shield, Sun, Moon, Info, Mail } from "lucide-react";
+import { Home, Megaphone, MessageSquare, Images, Search, Menu, X, User, LogOut, Shield, Sun, Moon, Info, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -8,7 +8,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotificationsDropdown from "@/components/NotificationsDropdown";
-import SearchBar from "@/components/Navigation/SearchBar";
 
 type NavItem = {
   label: string;
@@ -22,6 +21,7 @@ const navItems: NavItem[] = [
   { label: "Forum", href: "/forum", icon: MessageSquare },
   { label: "Galeria", href: "/galeria", icon: Images },
   { label: "Informacje", href: "/informacje", icon: Info },
+  { label: "Szukaj", href: "/szukaj", icon: Search },
 ];
 
 export default function Navbar() {
@@ -93,9 +93,8 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Search + Auth buttons desktop */}
+          {/* Auth buttons desktop */}
           <div className="hidden md:flex items-center gap-3">
-            <SearchBar />
             <button
               onClick={toggleTheme}
               className="p-2 rounded-xl text-foreground-2 hover:text-foreground hover:bg-background-3 transition-colors"
