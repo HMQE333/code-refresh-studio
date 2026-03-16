@@ -28,13 +28,19 @@ const footerLinks = [
       { label: "Zgłoś problem", href: "/zglos-problem" },
     ],
   },
+  {
+    title: "Wsparcie",
+    links: [
+      { label: "Wesprzyj nas (Tipply)", href: "/tipply" },
+    ],
+  },
 ];
 
 export default function Footer() {
   return (
     <footer className="border-t border-border bg-background-2">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center mb-4">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import Marquee from "@/components/Marquee";
 
 type Review = {
   id: string;
@@ -53,13 +54,14 @@ export default function Reviews() {
           <p className="text-foreground-2">Prawdziwe opinie z naszej społeczności.</p>
         </motion.div>
 
-        <div className="relative overflow-hidden" style={{ "--duration": "30s", "--gap": "1.25rem" } as React.CSSProperties}>
-          <div className="flex gap-[var(--gap)] animate-marquee w-max">
-            {[...reviews, ...reviews].map((review, i) => (
-              <ReviewCard key={`${review.id}-${i}`} review={review} />
-            ))}
-          </div>
-        </div>
+        <Marquee
+          pauseOnHover
+          className="[--duration:30s] [--gap:1.25rem]"
+        >
+          {reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))}
+        </Marquee>
       </div>
     </section>
   );
