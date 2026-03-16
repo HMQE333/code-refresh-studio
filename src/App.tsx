@@ -88,15 +88,17 @@ const App = () => (
             description="RybiaPaka.pl — największa społeczność wędkarska w Polsce. Forum, galeria, dyskusje na żywo."
           />
           <MaintenanceGate>
-            <div className="flex flex-col min-h-screen">
-              <Navbar />
-              <BanNotice />
-              <main className="flex-1">
-                <AnimatedRoutes />
-              </main>
-              <Footer />
-              <ScrollToTop />
-            </div>
+            <ModerationGate>
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <BanNotice />
+                <main className="flex-1">
+                  <AnimatedRoutes />
+                </main>
+                <Footer />
+                <ScrollToTop />
+              </div>
+            </ModerationGate>
           </MaintenanceGate>
         </AuthProvider>
       </BrowserRouter>
